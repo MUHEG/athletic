@@ -12,8 +12,8 @@ x <- ready4fun::make_pkg_desc_ls(pkg_title_1L_chr = "Analyse Health Data For Ath
                             If you have any questions, please contact the authors (matthew.hamilton2@monash.edu).",
                                  authors_prsn = c(utils::person(given = "Matthew",family = "Hamilton",email = "matthew.hamilton1@monash.edu", role = c("aut", "cre", "fnd"),comment = c(ORCID = "0000-0001-7407-9194")),
                                                   utils::person("Monash University", role = c("cph", "fnd"))),
-                                 urls_chr = c("https://ready4-dev.github.io/athletic/",
-                                              "https://github.com/ready4-dev/athletic",
+                                 urls_chr = c("https://muheg.github.io/athletic/",
+                                              "https://github.com/MUHEG/athletic",
                                               "https://ready4-dev.github.io/ready4/")) %>%
   ready4fun::make_manifest(addl_pkgs_ls = ready4fun::make_addl_pkgs_ls(suggests_chr = c("knitr","knitrBootstrap","rmarkdown")#,
                                                                        #imports_chr = c(),
@@ -42,11 +42,15 @@ z <- ready4pack::make_pt_ready4pack_manifest(x,
 z <- ready4::author(z)
 #ready4::write_extra_pkgs_to_actions(path_to_dir_1L_chr = ".github/workflows", consent_1L_chr = "Y")
 ready4::write_to_edit_workflow("pkgdown.yaml", consent_1L_chr = "Y") # In other packages, run for "test-coverage.yaml" as well.
-write_to_tidy_pkg(z$x_ready4fun_manifest, build_vignettes_1L_lgl = TRUE,
-                  clean_license_1L_lgl = TRUE, consent_1L_chr = "Y",
-                  examples_chr = character(0), suggest_chr = "pkgload")
+write_to_tidy_pkg(z$x_ready4fun_manifest,
+                  build_vignettes_1L_lgl = TRUE,
+                  clean_license_1L_lgl = TRUE,
+                  consent_1L_chr = "Y",
+                  examples_chr = character(0),
+                  project_1L_chr = "Framework",
+                  suggest_chr = "pkgload")
 # readLines("_pkgdown.yml") %>%
 #   stringr::str_replace_all("  - text: Model", "  - text: Framework & Model") %>%
 #   writeLines(con = "_pkgdown.yml")
-
+write_citation_fl(z$x_ready4fun_manifest)
 # devtools::build_vignettes()

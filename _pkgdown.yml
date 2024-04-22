@@ -1,0 +1,17 @@
+url: https://muheg.github.io/athletic/
+
+template:
+  bootstrap: 5
+  bootswatch: journal
+
+home:
+  links:
+  - text: Manual - User (PDF)
+    href: https://github.com/MUHEG/athletic/releases/download/Documentation_0.0/athletic_User.pdf
+  - text: Manual - Developer (PDF)
+    href: https://github.com/MUHEG/athletic/releases/download/Documentation_0.0/athletic_Developer.pdf
+  - text: Framework
+    href:  https://ready4-dev.github.io/ready4/
+development:
+  mode: auto
+reference:
