@@ -10,8 +10,8 @@ x <- ready4fun::make_pkg_desc_ls(pkg_title_1L_chr = "Analyse Health Data For Ath
                                  pkg_desc_1L_chr = "Tools for undertaking analysis of sports datasets for use in computational health economic models developed with the ready4 framework (https://ready4-dev.github.io/ready4/).
                             This development version of the athletic package has been made available as part of the process of testing and documenting the package.
                             If you have any questions, please contact the authors (matthew.hamilton2@monash.edu).",
-                                 authors_prsn = c(utils::person(given = "Matthew",family = "Hamilton",email = "matthew.hamilton1@monash.edu", role = c("aut", "cre", "fnd"),comment = c(ORCID = "0000-0001-7407-9194")),
-                                                  utils::person("Monash University", role = c("cph", "fnd"))),
+                                 authors_prsn = c(utils::person(given = "Matthew",family = "Hamilton",email = "matthew.hamilton1@monash.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7407-9194")),
+                                                  utils::person("Monash University", role = c("cph"))),
                                  urls_chr = c("https://muheg.github.io/athletic/",
                                               "https://github.com/MUHEG/athletic",
                                               "https://ready4-dev.github.io/ready4/")) %>%

@@ -8,6 +8,7 @@
 #' @param retainer_rows_1L_int Retainer rows (an integer vector of length one), Default: 12
 #' @param neuropsychological_rows_1L_int Neuropsychological rows (an integer vector of length one), Default: 1
 #' @param notes_rows_1L_int Notes rows (an integer vector of length one), Default: 3
+#' @param sheets_int Sheets (an integer vector), Default: 1
 #' @return Datasets (a list)
 #' @rdname get_raw_data
 #' @export 
@@ -19,11 +20,11 @@
 get_raw_data <- function (path_1L_chr, appointments_rows_1L_int = 30, referrals_cols_int = 4:8, 
     referrals_rows_1L_int = 9, cancellations_rows_1L_int = 247, 
     retainer_rows_1L_int = 12, neuropsychological_rows_1L_int = 1, 
-    notes_rows_1L_int = 3) 
+    notes_rows_1L_int = 3, sheets_int = 1) 
 {
-    datasets_ls <- purrr::map(1:6, ~readxl::read_xlsx(path_1L_chr, 
+    datasets_ls <- purrr::map(sheets_int, ~readxl::read_xlsx(path_1L_chr, 
         sheet = .x)) %>% stats::setNames(c("appointments", "referrals", 
-        "cancellations", "retainer", "neuropsychological", "notes"))
+        "cancellations", "retainer", "neuropsychological", "notes")[sheets_int])
     datasets_ls <- datasets_ls %>% purrr::map2(names(datasets_ls), 
         ~{
             index_1L_int <- switch(.y, appointments = appointments_rows_1L_int, 

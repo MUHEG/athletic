@@ -4,16 +4,16 @@ bibentry(
   bibtype  = "Manual",
   doi      = "10.5281/zenodo.11043502",
   title    = paste0(meta$Package,": ",meta$Title),
-  author   = c(person("Matthew Hamilton <matthew.hamilton1@monash.edu> [aut, cre, fnd]", "(<https://orcid.org/0000-0001-7407-9194>)")),
+  author   = c(person("Matthew Hamilton <matthew.hamilton1@monash.edu> [aut, cre]", "(<https://orcid.org/0000-0001-7407-9194>)")),
   year     = "2024",
   note     = sprintf("R package version %s", meta$Version),
   url      = "https://muheg.github.io/athletic/",
-  textVersion = paste("Matthew Hamilton <matthew.hamilton1@monash.edu> [aut, cre and fnd] (<https://orcid.org/0000-0001-7407-9194>) ",
+  textVersion = paste("Matthew Hamilton <matthew.hamilton1@monash.edu> [aut and cre] (<https://orcid.org/0000-0001-7407-9194>) ",
   "(2024).",
   paste0(meta$Package,": ",meta$Title,
   "."),
   paste0(sprintf("Version %s", meta$Version),"."),
   paste0("https://doi.org/",
-"10.5281/zenodo.5606250")
+"10.5281/zenodo.11043502")
   )
 )

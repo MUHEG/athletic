@@ -5,11 +5,12 @@ get_raw_data <- function(path_1L_chr,
                          cancellations_rows_1L_int  = 247,
                          retainer_rows_1L_int  = 12,
                          neuropsychological_rows_1L_int  = 1,
-                         notes_rows_1L_int  = 3
+                         notes_rows_1L_int  = 3,
+                         sheets_int = 1
 ){
-  datasets_ls <- purrr::map(1:6,
+  datasets_ls <- purrr::map(sheets_int,
                             ~readxl::read_xlsx(path_1L_chr,
-                                               sheet = .x)) %>% stats::setNames(c("appointments","referrals","cancellations","retainer", "neuropsychological","notes"))
+                                               sheet = .x)) %>% stats::setNames(c("appointments","referrals","cancellations","retainer", "neuropsychological","notes")[sheets_int])
   datasets_ls <- datasets_ls %>% purrr::map2(names(datasets_ls),
                                              ~ {
                                                index_1L_int <- switch(.y,

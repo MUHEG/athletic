@@ -25,7 +25,7 @@ add_sports_data <- function(datasets_ls,
   datasets_ls$appointments <- datasets_ls$appointments %>%
     dplyr::mutate(Group = purrr::map_chr(Sport, ~ {
       sport_1L_chr <- .x
-      dplyr::filter(group_lup, Sports %>% purrr::map_lgl(~sport_1L_chr %in% .x)) %>% dplyr::pull(Group)
+      dplyr::filter(datasets_ls$group_lup, Sports %>% purrr::map_lgl(~sport_1L_chr %in% .x)) %>% dplyr::pull(Group)
     }))
   datasets_ls$appointments <- dplyr::left_join(datasets_ls$appointments, datasets_ls$grouped_tb)
   if(drop_sport_1L_lgl)
