@@ -66,9 +66,15 @@ add_sports_data <- function (datasets_ls, categories_chr = c("Risky", "Subjectiv
         categories_chr = categories_chr, simple_1L_lgl = FALSE)
     datasets_ls$appointments <- datasets_ls$appointments %>% 
         dplyr::mutate(Group = purrr::map_chr(Sport, ~{
-            sport_1L_chr <- .x
-            dplyr::filter(datasets_ls$group_lup, Sports %>% purrr::map_lgl(~sport_1L_chr %in% 
-                .x)) %>% dplyr::pull(Group)
+            if (is.na(.x)) {
+                NA_character_
+            }
+            else {
+                sport_1L_chr <- .x
+                dplyr::filter(datasets_ls$group_lup, Sports %>% 
+                  purrr::map_lgl(~sport_1L_chr %in% .x)) %>% 
+                  dplyr::pull(Group)
+            }
         }))
     datasets_ls$appointments <- dplyr::left_join(datasets_ls$appointments, 
         datasets_ls$grouped_tb)
