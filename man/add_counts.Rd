@@ -4,10 +4,12 @@
 \alias{add_counts}
 \title{Add counts}
 \usage{
-add_counts(datasets_ls)
+add_counts(datasets_ls, sum_chr = c("Role"))
 }
 \arguments{
 \item{datasets_ls}{Datasets (a list)}
+
+\item{sum_chr}{Sum (a character vector), Default: c("Role")}
 }
 \value{
 Datasets (a list)

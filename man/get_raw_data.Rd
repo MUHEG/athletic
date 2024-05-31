@@ -13,6 +13,7 @@ get_raw_data(
   retainer_rows_1L_int = 12,
   neuropsychological_rows_1L_int = 1,
   notes_rows_1L_int = 3,
+  sports_1L_int = integer(0),
   sheets_int = 1
 )
 }
@@ -32,6 +33,8 @@ get_raw_data(
 \item{neuropsychological_rows_1L_int}{Neuropsychological rows (an integer vector of length one), Default: 1}
 
 \item{notes_rows_1L_int}{Notes rows (an integer vector of length one), Default: 3}
+
+\item{sports_1L_int}{Sports (an integer vector of length one), Default: integer(0)}
 
 \item{sheets_int}{Sheets (an integer vector), Default: 1}
 }

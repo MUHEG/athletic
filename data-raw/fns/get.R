@@ -6,15 +6,22 @@ get_raw_data <- function(path_1L_chr,
                          retainer_rows_1L_int  = 12,
                          neuropsychological_rows_1L_int  = 1,
                          notes_rows_1L_int  = 3,
+                         sports_1L_int = integer(0),
                          sheets_int = 1
 ){
+  if(identical(sports_1L_int, integer(0))){
+    sports_1L_chr <- character(0)
+  }else{
+    sports_1L_chr <- "sports_tb"
+  }
   datasets_ls <- purrr::map(sheets_int,
                             ~readxl::read_xlsx(path_1L_chr,
-                                               sheet = .x)) %>% stats::setNames(c("appointments","referrals","cancellations","retainer", "neuropsychological","notes")[sheets_int])
+                                               sheet = .x)) %>% stats::setNames(c("appointments",sports_1L_chr,"referrals","cancellations","retainer", "neuropsychological","notes")[sheets_int])
   datasets_ls <- datasets_ls %>% purrr::map2(names(datasets_ls),
                                              ~ {
                                                index_1L_int <- switch(.y,
                                                                       "appointments" = appointments_rows_1L_int,
+                                                                      "sports_tb" = sports_1L_int,
                                                                       "referrals" = referrals_rows_1L_int,
                                                                       "cancellations" = cancellations_rows_1L_int,
                                                                       "retainer" = retainer_rows_1L_int,

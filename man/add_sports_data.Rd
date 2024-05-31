@@ -7,7 +7,11 @@
 add_sports_data(
   datasets_ls,
   categories_chr = c("Risky", "Subjective", "Team", "Type", "Weighed", "Winter"),
-  drop_sport_1L_lgl = FALSE
+  drop_sport_1L_lgl = FALSE,
+  path_1L_chr = character(0),
+  sports_1L_int = 81,
+  sport_var_1L_chr = "Medlinks Sport categories",
+  sum_chr = c("Role")
 )
 }
 \arguments{
@@ -16,6 +20,14 @@ add_sports_data(
 \item{categories_chr}{Categories (a character vector), Default: c("Risky", "Subjective", "Team", "Type", "Weighed", "Winter")}
 
 \item{drop_sport_1L_lgl}{Drop sport (a logical vector of length one), Default: FALSE}
+
+\item{path_1L_chr}{Path (a character vector of length one), Default: character(0)}
+
+\item{sports_1L_int}{Sports (an integer vector of length one), Default: 81}
+
+\item{sport_var_1L_chr}{Sport variable (a character vector of length one), Default: 'Medlinks Sport categories'}
+
+\item{sum_chr}{Sum (a character vector), Default: c("Role")}
 }
 \value{
 Datasets (a list)
