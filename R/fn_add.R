@@ -2,6 +2,7 @@
 #' @description add_counts() is an Add function that updates an object by adding new values to new or empty fields. Specifically, this function implements an algorithm to add counts. The function returns Datasets (a list).
 #' @param datasets_ls Datasets (a list)
 #' @param sum_chr Sum (a character vector), Default: c("Role")
+#' @param uid_1L_chr Unique identifier (a character vector of length one), Default: 'Client ID'
 #' @return Datasets (a list)
 #' @rdname add_counts
 #' @export 
@@ -9,7 +10,7 @@
 #' @importFrom dplyr filter pull summarise n mutate left_join
 #' @importFrom rlang sym
 #' @keywords internal
-add_counts <- function (datasets_ls, sum_chr = c("Role")) 
+add_counts <- function (datasets_ls, sum_chr = c("Role"), uid_1L_chr = "Client ID") 
 {
     counts_tb <- datasets_ls$appointments$Group %>% unique() %>% 
         purrr::map(~datasets_ls$appointments %>% dplyr::filter(Group == 
@@ -19,7 +20,8 @@ add_counts <- function (datasets_ls, sum_chr = c("Role"))
             var_1L_chr <- .x
             datasets_ls$appointments %>% dplyr::pull(var_1L_chr) %>% 
                 unique() %>% sort() %>% purrr::map_dfc(~{
-                filtered_tb <- partial_tb %>% dplyr::filter(!!rlang::sym(var_1L_chr) == 
+                filtered_tb <- partial_tb %>% dplyr::filter(!duplicated(dplyr::pull(partial_tb, 
+                  !!rlang::sym(uid_1L_chr)))) %>% dplyr::filter(!!rlang::sym(var_1L_chr) == 
                   .x) %>% dplyr::summarise(`:=`(!!rlang::sym(.x), 
                   dplyr::n()))
             })
@@ -37,6 +39,7 @@ add_counts <- function (datasets_ls, sum_chr = c("Role"))
 #' @param sports_1L_int Sports (an integer vector of length one), Default: 81
 #' @param sport_var_1L_chr Sport variable (a character vector of length one), Default: 'Medlinks Sport categories'
 #' @param sum_chr Sum (a character vector), Default: c("Role")
+#' @param uid_1L_chr Unique identifier (a character vector of length one), Default: 'Client ID'
 #' @return Datasets (a list)
 #' @rdname add_sports_data
 #' @export 
@@ -47,7 +50,7 @@ add_counts <- function (datasets_ls, sum_chr = c("Role"))
 add_sports_data <- function (datasets_ls, categories_chr = c("Risky", "Subjective", 
     "Team", "Type", "Weighed", "Winter"), drop_sport_1L_lgl = FALSE, 
     path_1L_chr = character(0), sports_1L_int = 81, sport_var_1L_chr = "Medlinks Sport categories", 
-    sum_chr = c("Role")) 
+    sum_chr = c("Role"), uid_1L_chr = "Client ID") 
 {
     if (identical(path_1L_chr, character(0))) {
         datasets_ls$sports_tb <- make_sports_tb(datasets_ls, 
@@ -81,6 +84,7 @@ add_sports_data <- function (datasets_ls, categories_chr = c("Risky", "Subjectiv
     if (drop_sport_1L_lgl) 
         datasets_ls$appointments <- datasets_ls$appointments %>% 
             dplyr::select(-Sport)
-    datasets_ls <- add_counts(datasets_ls, sum_chr = sum_chr)
+    datasets_ls <- add_counts(datasets_ls, sum_chr = sum_chr, 
+        uid_1L_chr = uid_1L_chr)
     return(datasets_ls)
 }

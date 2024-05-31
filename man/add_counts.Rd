@@ -4,12 +4,14 @@
 \alias{add_counts}
 \title{Add counts}
 \usage{
-add_counts(datasets_ls, sum_chr = c("Role"))
+add_counts(datasets_ls, sum_chr = c("Role"), uid_1L_chr = "Client ID")
 }
 \arguments{
 \item{datasets_ls}{Datasets (a list)}
 
 \item{sum_chr}{Sum (a character vector), Default: c("Role")}
+
+\item{uid_1L_chr}{Unique identifier (a character vector of length one), Default: 'Client ID'}
 }
 \value{
 Datasets (a list)

@@ -11,7 +11,8 @@ add_sports_data(
   path_1L_chr = character(0),
   sports_1L_int = 81,
   sport_var_1L_chr = "Medlinks Sport categories",
-  sum_chr = c("Role")
+  sum_chr = c("Role"),
+  uid_1L_chr = "Client ID"
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ add_sports_data(
 \item{sport_var_1L_chr}{Sport variable (a character vector of length one), Default: 'Medlinks Sport categories'}
 
 \item{sum_chr}{Sum (a character vector), Default: c("Role")}
+
+\item{uid_1L_chr}{Unique identifier (a character vector of length one), Default: 'Client ID'}
 }
 \value{
 Datasets (a list)
