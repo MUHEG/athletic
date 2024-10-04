@@ -35,7 +35,7 @@ Useful links:
 
 Other contributors:
 \itemize{
-  \item Monash University [funder]
+  \item Monash University [copyright holder]
 }
 
 }

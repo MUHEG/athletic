@@ -6,37 +6,22 @@
 \usage{
 get_raw_data(
   path_1L_chr,
-  appointments_rows_1L_int = 30,
-  referrals_cols_int = 4:8,
-  referrals_rows_1L_int = 9,
-  cancellations_rows_1L_int = 247,
-  retainer_rows_1L_int = 12,
-  neuropsychological_rows_1L_int = 1,
-  notes_rows_1L_int = 3,
-  sports_1L_int = integer(0),
-  sheets_int = 1
+  referrals_cols_int = 4L:8L,
+  sheets_ls = NULL,
+  sheets_int = 1L,
+  tabs_chr = character(0)
 )
 }
 \arguments{
 \item{path_1L_chr}{Path (a character vector of length one)}
 
-\item{appointments_rows_1L_int}{Appointments rows (an integer vector of length one), Default: 30}
+\item{referrals_cols_int}{Referrals columns (an integer vector), Default: 4L:8L}
 
-\item{referrals_cols_int}{Referrals columns (an integer vector), Default: 4:8}
-
-\item{referrals_rows_1L_int}{Referrals rows (an integer vector of length one), Default: 9}
-
-\item{cancellations_rows_1L_int}{Cancellations rows (an integer vector of length one), Default: 247}
-
-\item{retainer_rows_1L_int}{Retainer rows (an integer vector of length one), Default: 12}
-
-\item{neuropsychological_rows_1L_int}{Neuropsychological rows (an integer vector of length one), Default: 1}
-
-\item{notes_rows_1L_int}{Notes rows (an integer vector of length one), Default: 3}
-
-\item{sports_1L_int}{Sports (an integer vector of length one), Default: integer(0)}
+\item{sheets_ls}{Sheets (a list), Default: NULL}
 
 \item{sheets_int}{Sheets (an integer vector), Default: 1}
+
+\item{tabs_chr}{Tabs (a character vector), Default: character(0)}
 }
 \value{
 Datasets (a list)

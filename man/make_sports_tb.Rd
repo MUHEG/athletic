@@ -6,13 +6,13 @@
 \usage{
 make_sports_tb(
   datasets_ls,
-  categories_chr = c("Risky", "Subjective", "Team", "Type", "Weighed", "Winter")
+  categories_chr = make_sports_categories("deprecated")
 )
 }
 \arguments{
 \item{datasets_ls}{Datasets (a list)}
 
-\item{categories_chr}{Categories (a character vector), Default: c("Risky", "Subjective", "Team", "Type", "Weighed", "Winter")}
+\item{categories_chr}{Categories (a character vector), Default: make_sports_categories("deprecated")}
 }
 \value{
 Sports (a tibble)

@@ -6,14 +6,14 @@
 \usage{
 make_sports_groups(
   datasets_ls,
-  categories_chr = c("Risky", "Subjective", "Team", "Type", "Weighed", "Winter"),
+  categories_chr = make_sports_categories(),
   simple_1L_lgl = TRUE
 )
 }
 \arguments{
 \item{datasets_ls}{Datasets (a list)}
 
-\item{categories_chr}{Categories (a character vector), Default: c("Risky", "Subjective", "Team", "Type", "Weighed", "Winter")}
+\item{categories_chr}{Categories (a character vector), Default: make_sports_categories()}
 
 \item{simple_1L_lgl}{Simple (a logical vector of length one), Default: TRUE}
 }

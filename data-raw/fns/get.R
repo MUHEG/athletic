@@ -1,37 +1,47 @@
 get_raw_data <- function(path_1L_chr,
-                         appointments_rows_1L_int = 30,
-                         referrals_cols_int = 4:8,
-                         referrals_rows_1L_int  = 9,
-                         cancellations_rows_1L_int  = 247,
-                         retainer_rows_1L_int  = 12,
-                         neuropsychological_rows_1L_int  = 1,
-                         notes_rows_1L_int  = 3,
-                         sports_1L_int = integer(0),
-                         sheets_int = 1
+                         referrals_cols_int = 4L:8L,
+                         sheets_ls = NULL,
+                         sheets_int = 1L,
+                         tabs_chr = character(0)
 ){
-  if(identical(sports_1L_int, integer(0))){
-    sports_1L_chr <- character(0)
-  }else{
-    sports_1L_chr <- "sports_tb"
+  if(identical(tabs_chr, character(0))){
+    if(!is.null(sheets_ls)){
+      tabs_chr <- names(sheets_ls)
+      if(!"sports_tb" %in% names(sheets_ls)){
+        sheets_int <- setdiff(sheets_int,2)
+        tabs_chr <- append(tabs_chr,"sports_tb", after = 1)
+      }
+    }else{
+      tabs_chr <- c("appointments", "cancellations", "referrals", "retainer",  "notes")
+    }
   }
   datasets_ls <- purrr::map(sheets_int,
                             ~readxl::read_xlsx(path_1L_chr,
-                                               sheet = .x)) %>% stats::setNames(c("appointments",sports_1L_chr,"referrals","cancellations","retainer", "neuropsychological","notes")[sheets_int])
+                                               sheet = .x)) %>% stats::setNames(tabs_chr[sheets_int])
   datasets_ls <- datasets_ls %>% purrr::map2(names(datasets_ls),
                                              ~ {
-                                               index_1L_int <- switch(.y,
-                                                                      "appointments" = appointments_rows_1L_int,
-                                                                      "sports_tb" = sports_1L_int,
-                                                                      "referrals" = referrals_rows_1L_int,
-                                                                      "cancellations" = cancellations_rows_1L_int,
-                                                                      "retainer" = retainer_rows_1L_int,
-                                                                      "neuropsychological" = neuropsychological_rows_1L_int,
-                                                                      "notes" = notes_rows_1L_int)
-                                               ds_tb <- .x %>% dplyr::slice(1:index_1L_int)
+                                               ds_tb <- .x
+                                               if(!is.null(sheets_ls)){
+                                                 indices_int <- sheets_ls %>% purrr::pluck(.y)
+                                                 ds_tb <- ds_tb %>% dplyr::slice(indices_int[1]:indices_int[2])
+                                               }
                                                if(.y == "referrals"){
                                                  ds_tb <- ds_tb[,referrals_cols_int]
                                                }
                                                ds_tb
                                              })
   return(datasets_ls)
+}
+get_sports_vars <- function(data_df = NULL,
+                            exclude_chr = character(0),
+                            group_1L_chr = character(0)){
+  sports_vars_chr <- c(group_1L_chr, "Risky", "Subjective", "Team", "Type", "Weighed", "Winter")
+
+  if(!is.null(data_df)){
+    sports_vars_chr <- intersect(names(data_df),sports_vars_chr)
+  }
+  if(!identical(exclude_chr, character(0))){
+    sports_vars_chr <- setdiff(sports_vars_chr, exclude_chr)
+  }
+  return(sports_vars_chr)
 }

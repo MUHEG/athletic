@@ -14,3 +14,5 @@
 ^initial_setup\.R$
 ^doc$
 ^Meta$
+^data-raw/fns/transform\.R$
+^data-raw/fns/update\.R$
