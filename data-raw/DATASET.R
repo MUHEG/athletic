@@ -24,12 +24,13 @@ x <- ready4fun::make_pkg_desc_ls(pkg_title_1L_chr = "Analyse Health Data For Ath
   check_type_1L_chr = "ready4",
   copyright_holders_chr = "Monash University",
   custom_dmt_ls = ready4fun::make_custom_dmt_ls(),##
-  # dev_pkgs_chr = c(#"cmdstanr",
-  #   #"ready4",#"ready4fun",
-  #   #"ready4use","ready4show"#,
-  #   #"youthvars","scorz",
-  #   #"specific"
-  # ),
+  dev_pkgs_chr = c(#"cmdstanr",
+    #"ready4",#"ready4fun",
+    "ready4use"
+    #,"ready4show"#,
+    #"youthvars","scorz",
+    #"specific"
+  ),
   lifecycle_stage_1L_chr = "experimental",
   path_to_pkg_logo_1L_chr = "../../../../../Documentation/Images/athletic-logo/default.png",
   piggyback_to_1L_chr = "ready4-dev/ready4",
