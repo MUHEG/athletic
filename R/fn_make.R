@@ -494,6 +494,7 @@ make_keys_dss <- function (data_tb, key_vars_chr, activity_1L_chr = "Activity",
 #' @importFrom lubridate ymd
 #' @importFrom dplyr bind_rows arrange mutate case_when rename select everything
 #' @importFrom serious add_temporal_vars add_new_uid add_tenure add_cumulatives add_episodes make_episodes_vars
+#' @importFrom ready4use add_from_lup_prototype Ready4useDyad add_dictionary
 #' @importFrom rlang syms sym
 #' @importFrom stringr str_sub
 #' @importFrom purrr map_chr
@@ -546,7 +547,7 @@ make_linked_ds <- function (datasets_ls = NULL, disciplines_1L_lgl = TRUE, end_d
     data_tb <- data_tb %>% dplyr::rename(Referrer = `Referrer Role`, 
         Aesthetic = `Aesthetic Sports`, Individual = `Individual Sports`, 
         Winter = `Winter Sports`)
-    data_tb <- data_tb %>% add_from_lup_prototype(match_var_nm_1L_chr = "UID", 
+    data_tb <- data_tb %>% ready4use::add_from_lup_prototype(match_var_nm_1L_chr = "UID", 
         method_1L_chr = "sample", vars_chr = c("Referrer", "Role", 
             "Sex", "Age", "Categorisation", "Para", "Aesthetic", 
             "Individual", "Winter"), type_1L_chr = "self")
@@ -567,7 +568,7 @@ make_linked_ds <- function (datasets_ls = NULL, disciplines_1L_lgl = TRUE, end_d
             "Annual Providers"))
     }
     if (what_1L_chr == "dyad") {
-        X <- Ready4useDyad(ds_tb = data_tb)
+        X <- ready4use::Ready4useDyad(ds_tb = data_tb)
         if (identical(var_ctg_chr, character(0))) {
             var_ctg_chr <- c("Identifier", "Temporal", rep("Healthcare", 
                 2), rep("Demographic", 3), rep("Sporting", 5), 
@@ -575,7 +576,7 @@ make_linked_ds <- function (datasets_ls = NULL, disciplines_1L_lgl = TRUE, end_d
                   2), "Spatial", rep("Healthcare", 5), rep("Temporal", 
                   10))
         }
-        X <- add_dictionary(X, var_ctg_chr = var_ctg_chr)
+        X <- ready4use::add_dictionary(X, var_ctg_chr = var_ctg_chr)
         X <- X %>% serious::add_cumulatives(metrics_chr = c("Appointments", 
             "Cancellations", "Referrals", "Cost"), arrange_by_1L_chr = "Date", 
             group_by_1L_chr = "UID")

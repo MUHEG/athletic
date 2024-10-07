@@ -453,7 +453,7 @@ make_linked_ds <- function(datasets_ls = NULL,
   data_tb <- dplyr::bind_rows(datasets_ls$appointments, datasets_ls$cancellations, datasets_ls$referrals) %>% dplyr::arrange(Date)
   data_tb <- serious::add_temporal_vars(data_tb, date_var_1L_chr = "Date", fiscal_start_1L_int = 7L)
   data_tb <- serious::add_new_uid(data_tb,  drop_old_uids_1L_lgl = T, arrange_by_1L_chr = "Date", imputed_uid_pfx_chr = imputed_uid_pfx_chr, recode_1L_lgl = T,uid_pfx_1L_chr = uid_pfx_1L_chr, uid_vars_chr = uid_vars_chr)
-  data_tb <- data_tb %>% serious::add_tenure(date_var_1L_chr = "Date", tenure_var_1L_chr = "Tenure", uid_var_1L_chr = "UID", unit_1L_chr = "year" )
+  data_tb <- data_tb %>% serious::add_tenure(date_var_1L_chr = "Date", tenure_var_1L_chr = "Tenure", uid_var_1L_chr = "UID", unit_1L_chr = "year")
   if(is.null(severity_args_ls)){
     severity_args_ls <- make_severity_args_ls(disciplines_ls = list(disciplines_1L_lgl), sessions_ls = list(sessions_moderate_int), names_chr = character(0), severity_var_1L_chr = severity_var_1L_chr)
   }
@@ -473,7 +473,7 @@ make_linked_ds <- function(datasets_ls = NULL,
                                        Individual = `Individual Sports`,
                                        Winter = `Winter Sports`)
   data_tb <- data_tb %>%
-    add_from_lup_prototype(#arrange_1L_chr = "Date",
+    ready4use::add_from_lup_prototype(#arrange_1L_chr = "Date",
       match_var_nm_1L_chr = "UID",
       method_1L_chr = "sample",
       vars_chr = c("Referrer", "Role", "Sex", "Age", "Categorisation", "Para",  "Aesthetic", "Individual", "Winter"),
@@ -492,7 +492,7 @@ make_linked_ds <- function(datasets_ls = NULL,
                                             "Annual Psychiatry Appointments", "Annual Psychology Appointments", "Annual Disciplines", "Annual Providers" ))
   }
   if(what_1L_chr == "dyad"){
-    X <- Ready4useDyad(ds_tb = data_tb)
+    X <- ready4use::Ready4useDyad(ds_tb = data_tb)
     if(identical(var_ctg_chr, character(0))){
       # Logic needs ammending when keep_all_1L_lgl==TRUE
       var_ctg_chr <- c("Identifier", "Temporal", rep("Healthcare",2),
@@ -502,16 +502,16 @@ make_linked_ds <- function(datasets_ls = NULL,
                        rep("Temporal",10)
       )
     }
-    X <- add_dictionary(X, var_ctg_chr = var_ctg_chr)
+    X <- ready4use::add_dictionary(X, var_ctg_chr = var_ctg_chr)
     X <- X %>% serious::add_cumulatives(metrics_chr = c("Appointments", "Cancellations", "Referrals",  "Cost"),
-                               arrange_by_1L_chr = "Date",
-                               group_by_1L_chr = "UID")
+                                        arrange_by_1L_chr = "Date",
+                                        group_by_1L_chr = "UID")
     X <- X %>% serious::add_episodes(separation_after_dbl = separation_after_dbl, end_date_dtm = end_date_dtm, unit_1L_chr = unit_1L_chr)
-    episodes_vars_ls <- serious::make_episodes_vars(separation_after_dbl = separation_after_dbl, flatten_1L_lgl = F)#1:length(separation_after_dbl) %>% purrr::map(~serious::make_episodes_vars(suffix_1L_chr = ifelse(.x==1,"",paste0("_",LETTERS[.x-1]))))
+    episodes_vars_ls <- serious::make_episodes_vars(separation_after_dbl = separation_after_dbl, flatten_1L_lgl = F)#1:length(separation_after_dbl) %>% purrr::map(~make_episodes_vars(suffix_1L_chr = ifelse(.x==1,"",paste0("_",LETTERS[.x-1]))))
     # X <- 1:length(separation_after_dbl) %>%
     #   purrr::reduce(.init = X,
-    #                 ~  .x %>% serious::add_episodes(separation_after_dbl = separation_after_dbl[.y], end_date_dtm = end_date_dtm, episodes_vars_chr = episodes_vars_ls[[.y]], unit_1L_chr = unit_1L_chr))
-    # X <- X %>% serious::add_disengaged(date_1L_chr = disengage_cut_off_1L_chr)
+    #                 ~  .x %>% add_episodes(separation_after_dbl = separation_after_dbl[.y], end_date_dtm = end_date_dtm, episodes_vars_chr = episodes_vars_ls[[.y]], unit_1L_chr = unit_1L_chr))
+    # X <- X %>% add_disengaged(date_1L_chr = disengage_cut_off_1L_chr)
     X@ds_tb <- X@ds_tb %>%
       dplyr::arrange(UID) %>%
       dplyr::select(UID, Date,
