@@ -102,23 +102,3 @@ update_ingested_data <- function(datasets_ls,
     ready4use::add_from_lup_prototype(lup_prototype_tb = datasets_ls$appointments, match_var_nm_1L_chr = uid_vars_chr[1], exclude_chr = exclude_chr, type_1L_chr = "batch")
   return(datasets_ls)
 }
-# update_retainers_ds <- function(retainers_tb,
-#                                 cost_var_1L_chr = "Retainer amount",
-#                                 date_var_1L_chr = "Retainer date",
-#                                 end_date_dtm = NULL){
-#   retainers_tb <- retainers_tb %>%
-#     dplyr::mutate(Clinicians = 1) %>%
-#     add_cyclic_cases(date_var_1L_chr = date_var_1L_chr, arrange_by_1L_chr = date_var_1L_chr, new_zeros_chr = "Clinicians", end_date_dtm = end_date_dtm) %>%
-#     dplyr::mutate(CumulativeRetainer = cumsum(!!rlang::sym(cost_var_1L_chr)),
-#                   CumulativeClinicians = cumsum(Clinicians)) %>%
-#     add_temporal_vars(date_var_1L_chr = date_var_1L_chr) %>%
-#     dplyr::mutate(Date = Day) %>%
-#     dplyr::select(Date, dplyr::everything())
-#   if(date_var_1L_chr!= "Date"){
-#     retainers_tb <- retainers_tb %>%
-#       dplyr::select(-!!rlang::sym(date_var_1L_chr))
-#   }
-#   retainers_tb <- retainers_tb %>%
-#     dplyr::rename(Retainer = !!rlang::sym(cost_var_1L_chr))
-#   return(retainers_tb)
-# }

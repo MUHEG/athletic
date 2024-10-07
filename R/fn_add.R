@@ -83,6 +83,7 @@ add_imputed_costs <- function (data_tb, arrange_by_1L_chr = character(0), cost_v
 #' @export 
 #' @importFrom lubridate ymd
 #' @importFrom dplyr filter pull group_by mutate case_when summarise ungroup select left_join arrange bind_rows
+#' @importFrom serious update_to_full_tenure
 #' @importFrom rlang sym
 #' @importFrom purrr map_dfr map_lgl reduce pmap_chr
 #' @importFrom tidyselect any_of
@@ -95,7 +96,7 @@ add_severity <- function (data_tb, severity_args_ls, appointments_var_1L_chr = "
     uid_var_1L_chr = "UID") 
 {
     full_tenure_tb <- data_tb %>% dplyr::filter(!is.na(UID)) %>% 
-        update_to_full_tenure(end_date_dtm = end_date_dtm)
+        serious::update_to_full_tenure(end_date_dtm = end_date_dtm)
     censored_tb <- setdiff(data_tb, full_tenure_tb)
     cuts_1L_int <- ceiling(max(full_tenure_tb %>% dplyr::pull(!!rlang::sym(tenure_var_1L_chr))))
     severity_vars_chr <- names(severity_args_ls$sessions_ls)
