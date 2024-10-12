@@ -19,9 +19,12 @@
 <url><loc>https://muheg.github.io/athletic/reference/make_clinical_vars.html</loc></url>
 <url><loc>https://muheg.github.io/athletic/reference/make_fake_clients.html</loc></url>
 <url><loc>https://muheg.github.io/athletic/reference/make_keepers.html</loc></url>
+<url><loc>https://muheg.github.io/athletic/reference/make_key_vars.html</loc></url>
 <url><loc>https://muheg.github.io/athletic/reference/make_keys_dss.html</loc></url>
 <url><loc>https://muheg.github.io/athletic/reference/make_linked_ds.html</loc></url>
 <url><loc>https://muheg.github.io/athletic/reference/make_modelling_dss.html</loc></url>
+<url><loc>https://muheg.github.io/athletic/reference/make_rename_lup.html</loc></url>
+<url><loc>https://muheg.github.io/athletic/reference/make_service_use_vars.html</loc></url>
 <url><loc>https://muheg.github.io/athletic/reference/make_severity_args_ls.html</loc></url>
 <url><loc>https://muheg.github.io/athletic/reference/make_severity_vars.html</loc></url>
 <url><loc>https://muheg.github.io/athletic/reference/make_sports_categories.html</loc></url>
@@ -34,5 +37,6 @@
 <url><loc>https://muheg.github.io/athletic/reference/transform_to_prep.html</loc></url>
 <url><loc>https://muheg.github.io/athletic/reference/update_fake_ages.html</loc></url>
 <url><loc>https://muheg.github.io/athletic/reference/update_ingested_data.html</loc></url>
+<url><loc>https://muheg.github.io/athletic/reference/update_patterns_ls.html</loc></url>
 </urlset>
 
