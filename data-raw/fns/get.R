@@ -2,8 +2,7 @@ get_raw_data <- function(path_1L_chr,
                          referrals_cols_int = 4L:8L,
                          sheets_ls = NULL,
                          sheets_int = 1L,
-                         tabs_chr = character(0)
-){
+                         tabs_chr = character(0)){
   if(identical(tabs_chr, character(0))){
     if(!is.null(sheets_ls)){
       tabs_chr <- names(sheets_ls)

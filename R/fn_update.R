@@ -145,3 +145,22 @@ update_ingested_data <- function (datasets_ls, categories_chr = c("Individual Sp
             type_1L_chr = "batch")
     return(datasets_ls)
 }
+#' Update patterns list
+#' @description update_patterns_ls() is an Update function that edits an object, while preserving core object attributes. Specifically, this function implements an algorithm to update patterns list. The function returns Patterns (a list).
+#' @param base_ls Base (a list), Default: list(c("[[:space:]]", ""))
+#' @param prefix_1L_chr Prefix (a character vector of length one), Default: 'Cumulative'
+#' @return Patterns (a list)
+#' @rdname update_patterns_ls
+#' @export 
+#' @keywords internal
+update_patterns_ls <- function (base_ls = list(c("[[:space:]]", "")), prefix_1L_chr = "Cumulative") 
+{
+    if (!identical(prefix_1L_chr, character(0))) {
+        patterns_ls <- append(base_ls, list(c(prefix_1L_chr, 
+            "")))
+    }
+    else {
+        patterns_ls <- base_ls
+    }
+    return(patterns_ls)
+}
