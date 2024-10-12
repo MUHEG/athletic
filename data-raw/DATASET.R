@@ -25,10 +25,11 @@ x <- ready4fun::make_pkg_desc_ls(pkg_title_1L_chr = "Analyse Health Data For Ath
   copyright_holders_chr = "Monash University",
   custom_dmt_ls = ready4fun::make_custom_dmt_ls(),##
   dev_pkgs_chr = c(#"cmdstanr",
-    #"ready4",#"ready4fun",
-    "ready4use", "serious"
+    "ready4",#"ready4fun",
+    "ready4use",
+    "serious",
     #,"ready4show"#,
-    #"youthvars","scorz",
+   "youthvars"  #,"scorz",
     #"specific"
   ),
   lifecycle_stage_1L_chr = "experimental",

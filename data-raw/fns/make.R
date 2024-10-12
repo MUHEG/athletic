@@ -93,9 +93,9 @@ make_fake_clients <- function(datasets_ls = NULL,
   }
   sessions_probs_ls <- sessions_probs_ls %>% stats::setNames(datasets_ls$referrals$`Referral type` %>% unique() %>% sort())
   df <- data.frame(Date = seq(lubridate::as_date(burn_from_1L_chr), lubridate::as_date(end_date_1L_chr),by='days'))
-  df <- add_date_vars(df,
+  df <- serious::add_date_vars(df,
                       date_var_1L_chr = "Date")
-  lamdas_lup <- c(burn_referrals_int, annual_referrals_int) %>% purrr::map2_dfr(df$Year %>% unique() %>% sort(),
+  lamdas_lup <- c(burn_referrals_int,annual_referrals_int) %>% purrr::map2_dfr(df$Year %>% unique() %>% sort(),
                                                                                ~tibble::tibble(Year = .y,  Quarter = 1:4,
                                                                                                N_Quarter_dbl = share_by_quarter_dbl * .x,0)) %>%
     dplyr::mutate(lambda_Weekdays_dbl = N_Quarter_dbl*(1 - share_at_weekend_dbl)*7/365.25,
@@ -236,7 +236,7 @@ make_fake_clients <- function(datasets_ls = NULL,
                                       purrr::map_int(~round(truncnorm::rtruncnorm(1,a=1,b=.x, mean=4))))
                     cumulatives_int <- expanded_tb %>% dplyr::pull(!!rlang::sym(uid_vars_chr[2]))%>% unique() %>%
                       purrr::map(~ expanded_tb %>% dplyr::filter(!!rlang::sym(uid_vars_chr[2]) == .x)  %>%
-                                   dplyr::pull(Add_Weeks) %>% calculate_running_totals())  %>% purrr::flatten() %>% purrr::flatten_int()
+                                   dplyr::pull(Add_Weeks) %>% serious::calculate_running_totals())  %>% purrr::flatten() %>% purrr::flatten_int()
                     expanded_tb <-  expanded_tb %>%
                       dplyr::ungroup()
                     expanded_tb <- expanded_tb %>% dplyr::mutate(Add_Weeks = cumulatives_int)
@@ -309,7 +309,7 @@ make_fake_clients <- function(datasets_ls = NULL,
   clients_tb <- rbind(clients_tb, appointments_tb, cancellations_tb) %>%
     dplyr::arrange(Date) %>%
     dplyr::select(-dplyr::starts_with("Annual Sessions") )
-  clients_tb <- add_date_vars(clients_tb, date_var_1L_chr = "Date") %>%
+  clients_tb <- serious::add_date_vars(clients_tb, date_var_1L_chr = "Date") %>%
     dplyr::filter(!Date > end_date_1L_chr) %>%
     dplyr::filter(!Date < start_date_1L_chr)
 
@@ -461,9 +461,9 @@ make_linked_ds <- function(datasets_ls = NULL,
                                       provider_location_1L_chr = provider_location_1L_chr,
                                       uid_vars_chr = uid_vars_chr)
   data_tb <- dplyr::bind_rows(datasets_ls$appointments, datasets_ls$cancellations, datasets_ls$referrals) %>% dplyr::arrange(Date)
-  data_tb <- add_temporal_vars(data_tb, date_var_1L_chr = "Date", fiscal_start_1L_int = 7L)
-  data_tb <- add_new_uid(data_tb,  drop_old_uids_1L_lgl = T, arrange_by_1L_chr = "Date", imputed_uid_pfx_chr = imputed_uid_pfx_chr, recode_1L_lgl = T,uid_pfx_1L_chr = uid_pfx_1L_chr, uid_vars_chr = uid_vars_chr)
-  data_tb <- data_tb %>% add_tenure(date_var_1L_chr = "Date", tenure_var_1L_chr = "Tenure", uid_var_1L_chr = "UID", unit_1L_chr = "year" )
+  data_tb <- serious::add_temporal_vars(data_tb, date_var_1L_chr = "Date", fiscal_start_1L_int = 7L)
+  data_tb <- serious::add_new_uid(data_tb,  drop_old_uids_1L_lgl = T, arrange_by_1L_chr = "Date", imputed_uid_pfx_chr = imputed_uid_pfx_chr, recode_1L_lgl = T,uid_pfx_1L_chr = uid_pfx_1L_chr, uid_vars_chr = uid_vars_chr)
+  data_tb <- data_tb %>% serious::add_tenure(date_var_1L_chr = "Date", tenure_var_1L_chr = "Tenure", uid_var_1L_chr = "UID", unit_1L_chr = "year")
   if(is.null(severity_args_ls)){
     severity_args_ls <- make_severity_args_ls(disciplines_ls = list(disciplines_1L_lgl), sessions_ls = list(sessions_moderate_int), names_chr = character(0), severity_var_1L_chr = severity_var_1L_chr)
   }
@@ -483,7 +483,7 @@ make_linked_ds <- function(datasets_ls = NULL,
                                        Individual = `Individual Sports`,
                                        Winter = `Winter Sports`)
   data_tb <- data_tb %>%
-    add_from_lup_prototype(#arrange_1L_chr = "Date",
+    ready4use::add_from_lup_prototype(#arrange_1L_chr = "Date",
       match_var_nm_1L_chr = "UID",
       method_1L_chr = "sample",
       vars_chr = c("Referrer", "Role", "Sex", "Age", "Categorisation", "Para",  "Aesthetic", "Individual", "Winter"),
@@ -502,7 +502,7 @@ make_linked_ds <- function(datasets_ls = NULL,
                                             "Annual Psychiatry Appointments", "Annual Psychology Appointments", "Annual Disciplines", "Annual Providers" ))
   }
   if(what_1L_chr == "dyad"){
-    X <- Ready4useDyad(ds_tb = data_tb)
+    X <- ready4use::Ready4useDyad(ds_tb = data_tb)
     if(identical(var_ctg_chr, character(0))){
       # Logic needs ammending when keep_all_1L_lgl==TRUE
       var_ctg_chr <- c("Identifier", "Temporal", rep("Healthcare",2),
@@ -512,12 +512,12 @@ make_linked_ds <- function(datasets_ls = NULL,
                        rep("Temporal",10)
       )
     }
-    X <- add_dictionary(X, var_ctg_chr = var_ctg_chr)
-    X <- X %>% add_cumulatives(metrics_chr = c("Appointments", "Cancellations", "Referrals",  "Cost"),
-                               arrange_by_1L_chr = "Date",
-                               group_by_1L_chr = "UID")
-    X <- X %>% add_episodes(separation_after_dbl = separation_after_dbl, end_date_dtm = end_date_dtm, unit_1L_chr = unit_1L_chr)
-    episodes_vars_ls <- make_episodes_vars(separation_after_dbl = separation_after_dbl, flatten_1L_lgl = F)#1:length(separation_after_dbl) %>% purrr::map(~make_episodes_vars(suffix_1L_chr = ifelse(.x==1,"",paste0("_",LETTERS[.x-1]))))
+    X <- ready4use::add_dictionary(X, var_ctg_chr = var_ctg_chr)
+    X <- X %>% serious::add_cumulatives(metrics_chr = c("Appointments", "Cancellations", "Referrals",  "Cost"),
+                                        arrange_by_1L_chr = "Date",
+                                        group_by_1L_chr = "UID")
+    X <- X %>% serious::add_episodes(separation_after_dbl = separation_after_dbl, end_date_dtm = end_date_dtm, unit_1L_chr = unit_1L_chr)
+    episodes_vars_ls <- serious::make_episodes_vars(separation_after_dbl = separation_after_dbl, flatten_1L_lgl = F)#1:length(separation_after_dbl) %>% purrr::map(~make_episodes_vars(suffix_1L_chr = ifelse(.x==1,"",paste0("_",LETTERS[.x-1]))))
     # X <- 1:length(separation_after_dbl) %>%
     #   purrr::reduce(.init = X,
     #                 ~  .x %>% add_episodes(separation_after_dbl = separation_after_dbl[.y], end_date_dtm = end_date_dtm, episodes_vars_chr = episodes_vars_ls[[.y]], unit_1L_chr = unit_1L_chr))

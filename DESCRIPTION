@@ -1,6 +1,6 @@
 Package: athletic
 Title: Analyse Health Data for Athletes and Sports Support Staff
-Version: 0.0.0.9010
+Version: 0.0.0.9011
 Authors@R: c(
     person("Matthew", "Hamilton", , "matthew.hamilton1@monash.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7407-9194")),
@@ -34,10 +34,9 @@ Imports:
     purrr,
     readxl,
     ready4,
-    ready4show,
-    ready4use (>= 0.0.0.9235),
+    ready4use (>= 0.0.0.9234),
     rlang,
-    serious (>= 0.0.0.9002),
+    serious (>= 0.0.0.9001),
     stats,
     stringr,
     tibble,

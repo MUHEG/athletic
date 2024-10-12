@@ -55,8 +55,12 @@ add_severity <- function(data_tb,
                          severity_var_1L_chr = "Severity",
                          tenure_var_1L_chr = "Tenure",
                          uid_var_1L_chr = "UID"){
-  full_tenure_tb <- data_tb %>% dplyr::filter(!is.na(UID)) %>% update_to_full_tenure(end_date_dtm = end_date_dtm)
-  censored_tb <- setdiff(data_tb, full_tenure_tb)
+  full_tenure_tb <- data_tb %>% dplyr::filter(!is.na(UID)) %>% serious::update_to_full_tenure(end_date_dtm = end_date_dtm)
+  censored_tb <- dplyr::setdiff(data_tb, full_tenure_tb %>% dplyr::select(-setdiff(names(full_tenure_tb), names(data_tb))))
+  if(!identical(setdiff(names(full_tenure_tb), names(censored_tb)), character(0))){
+    censored_tb <- censored_tb %>%
+      dplyr::left_join(full_tenure_tb)
+  }
   cuts_1L_int <- ceiling(max(full_tenure_tb %>% dplyr::pull(!!rlang::sym(tenure_var_1L_chr))))
   severity_vars_chr <- names(severity_args_ls$sessions_ls)
   full_tenure_tb <- 1:cuts_1L_int %>%

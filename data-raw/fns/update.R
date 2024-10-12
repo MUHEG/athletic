@@ -88,8 +88,8 @@ update_ingested_data <- function(datasets_ls,
     ready4use::add_latest_match(dynamic_lup = datasets_ls$referrals, target_var_nm_1L_chr = "Referrer Role", match_var_nm_1L_chr = uid_vars_chr[1], invert_1L_lgl = T)
   datasets_ls$appointments <- datasets_ls$appointments %>%
     ready4use::add_from_lup_prototype(arrange_1L_chr = "Date", match_var_nm_1L_chr = uid_vars_chr[1],
-                           exclude_chr = c(uid_vars_chr[2],"Date","Service", exclude_chr, provider_id_1L_chr, provider_location_1L_chr, "Activity", "Appointments", "Cancellations", "Referrals"),
-                           type_1L_chr = "self")
+                                      exclude_chr = c(uid_vars_chr[2],"Date","Service", exclude_chr, provider_id_1L_chr, provider_location_1L_chr, "Activity", "Appointments", "Cancellations", "Referrals"),
+                                      type_1L_chr = "self")
   datasets_ls$cancellations <- datasets_ls$cancellations %>%
     ready4use::add_latest_match(dynamic_lup = datasets_ls$referrals, target_var_nm_1L_chr = "Referrer Role", match_var_nm_1L_chr = uid_vars_chr[1])
   datasets_ls$cancellations <- datasets_ls$cancellations %>%
@@ -113,4 +113,3 @@ update_patterns_ls <- function(base_ls = list(c("[[:space:]]", "")),
   }
   return(patterns_ls)
 }
-
