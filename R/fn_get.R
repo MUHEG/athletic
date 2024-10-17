@@ -68,7 +68,6 @@ get_key_vars <- function (data_tb, activity_1L_chr = "Activity", athlete_roles_c
 #' @importFrom readxl read_xlsx
 #' @importFrom stats setNames
 #' @importFrom dplyr slice
-#' @keywords internal
 get_raw_data <- function (path_1L_chr, referrals_cols_int = 4L:8L, sheets_ls = NULL, 
     sheets_int = 1L, tabs_chr = character(0)) 
 {

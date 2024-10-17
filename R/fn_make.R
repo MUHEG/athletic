@@ -27,6 +27,125 @@ make_clinical_vars <- function (activity_1L_chr = "Activity", clinical_team_1L_c
     }
     return(clinical_vars_chr)
 }
+#' Make dictionary lookup tables
+#' @description make_dictionary_lups() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make dictionary lookup tables. The function returns Dictionary lookup tables (a list).
+#' @param periods_chr Periods (a character vector), Default: paste0("Year", 1:3)
+#' @param period_1L_chr Period (a character vector of length one), Default: 'Year'
+#' @return Dictionary lookup tables (a list)
+#' @rdname make_dictionary_lups
+#' @export 
+#' @importFrom tibble tribble
+#' @importFrom ready4show ready4show_correspondences renew.ready4show_correspondences
+#' @importFrom purrr reduce map_chr map2_chr
+#' @importFrom stringr str_remove_all str_replace_all
+#' @importFrom ready4 get_from_lup_obj
+#' @importFrom dplyr arrange
+#' @keywords internal
+make_dictionary_lups <- function (periods_chr = paste0("Year", 1:3), period_1L_chr = "Year") 
+{
+    category_lup <- tibble::tribble(~old_nms_chr, ~new_nms_chr, 
+        "Severity", "Clinical", "Severity_7_to_12_plus_Disc", 
+        "Clinical", "Age", "Demographic", "Role", "Demographic", 
+        "Sex", "Demographic", "Active", "Healthcare", "Active_6", 
+        "Healthcare", "Activity", "Healthcare", "Appointments", 
+        "Healthcare", "Cancellations", "Healthcare", "Cost", 
+        "Financial", "CumulativeAppointments", "Healthcare", 
+        "CumulativeCancellations", "Healthcare", "CumulativeCost", 
+        "Healthcare", "CumulativeEpisodes", "Healthcare", "CumulativeEpisodes_6", 
+        "Healthcare", "CumulativeReferrals", "Healthcare", "CumulativeSeparations", 
+        "Healthcare", "CumulativeSeparations_6", "Healthcare", 
+        "Episodes", "Healthcare", "Episodes_6", "Healthcare", 
+        "ProviderID", "Healthcare", "Referrals", "Healthcare", 
+        "Referrer", "Healthcare", "Separations", "Healthcare", 
+        "Separations_6", "Healthcare", "Service", "Temporal", 
+        "Tenure", "Temporal", "UID", "Identifier", "ProviderState", 
+        "Spatial", "Aesthetic", "Sporting", "Categorisation", 
+        "Sporting", "Individual", "Sporting", "Para", "Sporting", 
+        "Winter", "Sporting", "Date", "Temporal", "Day", "Temporal", 
+        "Duration", "Temporal", "FiscalQuarter", "Temporal", 
+        "FiscalYQ", "Temporal", "FiscalYear", "Temporal", "Month", 
+        "Temporal", "Quarter", "Temporal", "Week", "Temporal", 
+        "Weekday", "Temporal", "Year", "Temporal", "DEPsychology", 
+        "Healthcare", "Dietetics", "Healthcare", "Psychiatry", 
+        "Healthcare", "Psychology", "Healthcare", "Clinicians", 
+        "Healthcare", "Retainer", "Financial", "CumulativeRetainer", 
+        "Financial", "CumulativeClinicians", "Healthcare") %>% 
+        ready4show::ready4show_correspondences()
+    description_lup <- tibble::tribble(~old_nms_chr, ~new_nms_chr, 
+        "Severity", "Clinical severity (derived from 12 month service use history) - base case definition", 
+        "Severity_7_to_12_plus_Disc", "Clinical severity (derived from 12 month service use history) - sensitivity definition", 
+        "Age", "Age in years", "Role", "Staff, athlete or supporter role", 
+        "Sex", "Sex", "Active", "Currently active client - base case definition", 
+        "Active_6", "Currently active client - sensitivity definition", 
+        "Activity", "Type of service activity", "Appointments", 
+        "Number of appointments on this date", "Cancellations", 
+        "Number of cancellations on this date", "Cost", "Cost incurred on this date", 
+        "CumulativeAppointments", "Cumulative number of appointments to date", 
+        "CumulativeCancellations", "Cumulative number of cancellations to date", 
+        "CumulativeCost", "Cumulative cost to date", "CumulativeEpisodes", 
+        "Cumulative number of episodes of care to date - base case definition", 
+        "CumulativeEpisodes_6", "Cumulative number of episodes of care to date - sensitivity definition", 
+        "CumulativeReferrals", "Cumulative number of referrals to date", 
+        "CumulativeSeparations", "Cumulative number of separations to date - base case definition", 
+        "CumulativeSeparations_6", "Cumulative number of separations to date - sensitivity definition", 
+        "Episodes", "Number of episodes of care opened on this date - base case definition", 
+        "Episodes_6", "Number of episodes of care opened on this date - sensitivity definition", 
+        "ProviderID", "Unique identifier of provider of clinical service", 
+        "Referrals", "Number of referrals on this date", "Referrer", 
+        "Referral source", "Separations", "Number of separations made on this date - base case definition", 
+        "Separations_6", "Number of separations made on this date - sensitivity definition", 
+        "Service", "Type of clinical service provided", "Tenure", 
+        "Total length of time between index service activity and latest service activity", 
+        "UID", "Unique identifier or MHRN client", "ProviderState", 
+        "State and Territory of the provider of the clinical service", 
+        "Aesthetic", "Involved in an aesthetic sport", "Categorisation", 
+        "AIS sporting categorisation", "Individual", "Involved in an individual sport", 
+        "Para", "A para-athlete", "Winter", "Involved in a winter sport", 
+        "Date", "Date", "Day", "Date day, month and year", "Duration", 
+        "Duration of service encounter", "FiscalQuarter", "Date fiscal year quarter number", 
+        "FiscalYQ", "Date fiscal year end year and quarter", 
+        "FiscalYear", "Date fiscal year", "Month", "Date calendar year month", 
+        "Quarter", "Date calendar year year quarter", "Week", 
+        "Date calendar year year and the week number", "Weekday", 
+        "Date day of the week", "Year", "Date calendar year", 
+        "DEPsychology", "Number of disordered eating psychology appointments on this date", 
+        "Dietetics", "Number of dietetics appointments on this date", 
+        "Psychiatry", "Number of psychiatry appointments on this date", 
+        "Psychology", "Number of pscyhology (excluding disordered eating psychology) appointments on this date", 
+        "Clinicians", "Number of clinicians added to network on this date", 
+        "Retainer", "Annual retainer fees incurred on this date", 
+        "CumulativeRetainer", "Cumulative retainer fees incurred up to this date", 
+        "CumulativeClinicians", "Cumulative number of clinicians added to network up to this date") %>% 
+        ready4show::ready4show_correspondences()
+    if (!identical(periods_chr, character(0))) {
+        base_vars_chr <- c("Appointments", "Cancellations", "Cost", 
+            "DEPsychology", "Dietetics", "Episodes", "Psychiatry", 
+            "Psychology", "Referrals", "Separations")
+        extra_vars_chr <- purrr::reduce(periods_chr, .init = character(0), 
+            ~c(.x, paste0(.y, base_vars_chr)))
+        base_repeated_chr <- periods_chr %>% purrr::reduce(.init = extra_vars_chr, 
+            ~.x %>% stringr::str_remove_all(.y))
+        prefixes_chr <- base_vars_chr %>% purrr::reduce(.init = extra_vars_chr, 
+            ~.x %>% stringr::str_remove_all(.y))
+        extra_ctgs_chr <- base_repeated_chr %>% purrr::map_chr(~ready4::get_from_lup_obj(category_lup, 
+            match_var_nm_1L_chr = "old_nms_chr", match_value_xx = .x, 
+            target_var_nm_1L_chr = "new_nms_chr"))
+        extra_descs_chr <- base_repeated_chr %>% purrr::map2_chr(prefixes_chr, 
+            ~ready4::get_from_lup_obj(description_lup, match_var_nm_1L_chr = "old_nms_chr", 
+                match_value_xx = .x, target_var_nm_1L_chr = "new_nms_chr") %>% 
+                stringr::str_replace_all("on this date", paste0("during ", 
+                  period_1L_chr %>% tolower(), " ", stringr::str_remove_all(.y, 
+                    period_1L_chr))))
+        category_lup <- ready4show::renew.ready4show_correspondences(category_lup, 
+            old_nms_chr = extra_vars_chr, new_nms_chr = extra_ctgs_chr)
+        description_lup <- ready4show::renew.ready4show_correspondences(description_lup, 
+            old_nms_chr = extra_vars_chr, new_nms_chr = extra_descs_chr)
+    }
+    category_lup <- dplyr::arrange(category_lup, old_nms_chr)
+    description_lup <- dplyr::arrange(description_lup, old_nms_chr)
+    dictionary_lups_ls <- list(var_ctg_chr = category_lup, var_desc_chr = description_lup)
+    return(dictionary_lups_ls)
+}
 #' Make fake clients
 #' @description make_fake_clients() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make fake clients. The function returns Clients (a tibble).
 #' @param datasets_ls Datasets (a list), Default: NULL
@@ -517,7 +636,6 @@ make_keys_dss <- function (data_tb, key_vars_chr, activity_1L_chr = "Activity",
 #' @importFrom rlang syms sym
 #' @importFrom stringr str_sub
 #' @importFrom purrr map_chr
-#' @keywords internal
 make_linked_ds <- function (datasets_ls = NULL, disciplines_1L_lgl = TRUE, end_date_dtm = lubridate::ymd("2024-06-30"), 
     exclude_chr = c("Cost", "Duration"), imputed_uid_pfx_chr = "UNK", 
     keep_all_1L_lgl = FALSE, missing_1L_chr = "0", path_1L_chr = character(0), 
@@ -753,7 +871,6 @@ make_rename_lup <- function ()
 #' @importFrom rlang sym
 #' @importFrom purrr reduce
 #' @importFrom stringr str_replace_all
-#' @keywords internal
 make_service_use_vars <- function (X_Ready4useDyad, active_base_1L_chr = "Active", patterns_ls = list(c("[[:space:]]", 
     "")), prefix_1L_chr = "Cumulative", separation_after_dbl = c(3, 
     6), service_var_1L_chr = "Service", tenure_var_1L_chr = "Tenure") 
@@ -783,7 +900,6 @@ make_service_use_vars <- function (X_Ready4useDyad, active_base_1L_chr = "Active
 #' @export 
 #' @importFrom purrr map
 #' @importFrom stats setNames
-#' @keywords internal
 make_severity_args_ls <- function (disciplines_ls, sessions_ls, names_chr = character(0), 
     severity_var_1L_chr = "Severity") 
 {

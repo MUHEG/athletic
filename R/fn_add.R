@@ -9,7 +9,6 @@
 #' @importFrom purrr map map_dfr map_dfc
 #' @importFrom dplyr filter pull summarise n mutate left_join
 #' @importFrom rlang sym
-#' @keywords internal
 add_counts <- function (datasets_ls, sum_chr = c("Role"), uid_1L_chr = "Client ID") 
 {
     counts_tb <- datasets_ls$appointments$Group %>% unique() %>% 
@@ -42,7 +41,6 @@ add_counts <- function (datasets_ls, sum_chr = c("Role"), uid_1L_chr = "Client I
 #' @importFrom dplyr filter group_by summarise ungroup select left_join mutate case_when bind_rows arrange
 #' @importFrom rlang sym
 #' @importFrom tidyselect all_of
-#' @keywords internal
 add_imputed_costs <- function (data_tb, arrange_by_1L_chr = character(0), cost_var_1L_chr = "Cost", 
     provider_id_1L_chr = "ProviderID") 
 {
@@ -87,7 +85,6 @@ add_imputed_costs <- function (data_tb, arrange_by_1L_chr = character(0), cost_v
 #' @importFrom rlang sym
 #' @importFrom purrr map_dfr map_lgl reduce pmap_chr
 #' @importFrom tidyselect any_of
-#' @keywords internal
 add_severity <- function (data_tb, severity_args_ls, appointments_var_1L_chr = "Appointments", 
     date_var_1L_chr = "Date", disciplines_chr = c("DE Psychology", 
         "Dietetics", "Psychiatry", "Psychology"), end_date_dtm = lubridate::ymd("2024-06-30"), 
@@ -176,7 +173,6 @@ add_severity <- function (data_tb, severity_args_ls, appointments_var_1L_chr = "
 #' @importFrom dplyr rename select mutate across where pull case_when filter left_join
 #' @importFrom tidyr all_of
 #' @importFrom rlang sym
-#' @keywords internal
 add_sports_data <- function (datasets_ls, categories_chr = make_sports_categories(), 
     drop_sport_1L_lgl = FALSE, path_1L_chr = character(0), sports_1L_int = 81L, 
     sports_tab_1L_int = 2L, sport_var_1L_chr = "Medlinks Sport categories", 

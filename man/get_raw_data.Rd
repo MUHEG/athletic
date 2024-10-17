@@ -29,4 +29,3 @@ Datasets (a list)
 \description{
 get_raw_data() is a Get function that extracts data from an object. Specifically, this function implements an algorithm to get raw data. The function returns Datasets (a list).
 }
-\keyword{internal}

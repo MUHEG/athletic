@@ -35,4 +35,3 @@ Service use (a character vector)
 \description{
 make_service_use_vars() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make service use variables. The function returns Service use (a character vector).
 }
-\keyword{internal}

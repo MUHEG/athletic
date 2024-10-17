@@ -26,4 +26,3 @@ Severity arguments (a list)
 \description{
 make_severity_args_ls() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make severity arguments list. The function returns Severity arguments (a list).
 }
-\keyword{internal}
