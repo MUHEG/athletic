@@ -694,7 +694,7 @@ make_linked_ds <- function (datasets_ls = NULL, disciplines_1L_lgl = TRUE, end_d
         Service, !!rlang::sym(provider_id_1L_chr), !!rlang::sym(provider_location_1L_chr), 
         Activity, Appointments, Cancellations, Referrals, Cost, 
         Weekday, Week, Quarter, Year, FiscalQuarter, FiscalYear, 
-        dplyr::everything()) %>% dplyr::arrange(UID)
+        dplyr::everything()) %>% dplyr::arrange(UID, Date)
     data_tb <- data_tb %>% dplyr::mutate(Date = Date %>% format() %>% 
         stringr::str_sub(end = 10) %>% lubridate::ymd())
     if (!keep_all_1L_lgl) {
@@ -721,18 +721,20 @@ make_linked_ds <- function (datasets_ls = NULL, disciplines_1L_lgl = TRUE, end_d
             end_date_dtm = end_date_dtm, unit_1L_chr = unit_1L_chr)
         episodes_vars_ls <- serious::make_episodes_vars(separation_after_dbl = separation_after_dbl, 
             flatten_1L_lgl = F)
-        X@ds_tb <- X@ds_tb %>% dplyr::arrange(UID) %>% dplyr::select(UID, 
-            Date, Referrer, Tenure, Role, Sex, Age, Categorisation, 
-            Para, Aesthetic, Individual, Winter, !!!rlang::syms(severity_vars_chr), 
-            Service, !!rlang::sym(provider_id_1L_chr), !!rlang::sym(provider_location_1L_chr), 
-            Activity, !!!rlang::syms(episodes_vars_ls %>% purrr::map_chr(~.x[2])), 
-            Appointments, Cancellations, Referrals, Cost, !!!rlang::syms(episodes_vars_ls %>% 
-                purrr::map_chr(~.x[3])), !!!rlang::syms(episodes_vars_ls %>% 
-                purrr::map_chr(~.x[1])), paste0("Cumulative", 
-                c(episodes_vars_ls %>% purrr::map_chr(~.x[2]), 
-                  "Appointments", "Cancellations", "Referrals", 
-                  "Cost", episodes_vars_ls %>% purrr::map_chr(~.x[3]))), 
-            dplyr::everything())
+        X@ds_tb <- X@ds_tb %>% dplyr::arrange(UID, Date) %>% 
+            dplyr::select(UID, Date, Referrer, Tenure, Role, 
+                Sex, Age, Categorisation, Para, Aesthetic, Individual, 
+                Winter, !!!rlang::syms(severity_vars_chr), Service, 
+                !!rlang::sym(provider_id_1L_chr), !!rlang::sym(provider_location_1L_chr), 
+                Activity, !!!rlang::syms(episodes_vars_ls %>% 
+                  purrr::map_chr(~.x[2])), Appointments, Cancellations, 
+                Referrals, Cost, !!!rlang::syms(episodes_vars_ls %>% 
+                  purrr::map_chr(~.x[3])), !!!rlang::syms(episodes_vars_ls %>% 
+                  purrr::map_chr(~.x[1])), paste0("Cumulative", 
+                  c(episodes_vars_ls %>% purrr::map_chr(~.x[2]), 
+                    "Appointments", "Cancellations", "Referrals", 
+                    "Cost", episodes_vars_ls %>% purrr::map_chr(~.x[3]))), 
+                dplyr::everything())
         data_xx <- X
     }
     else {

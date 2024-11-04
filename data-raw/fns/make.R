@@ -611,7 +611,7 @@ make_linked_ds <- function(datasets_ls = NULL,
                                       uid_vars_chr = uid_vars_chr)
   data_tb <- dplyr::bind_rows(datasets_ls$appointments, datasets_ls$cancellations, datasets_ls$referrals) %>% dplyr::arrange(Date)
   data_tb <- serious::add_temporal_vars(data_tb, date_var_1L_chr = "Date", fiscal_start_1L_int = 7L)
-  data_tb <- serious::add_new_uid(data_tb,  drop_old_uids_1L_lgl = T, arrange_by_1L_chr = "Date", imputed_uid_pfx_chr = imputed_uid_pfx_chr, recode_1L_lgl = T,uid_pfx_1L_chr = uid_pfx_1L_chr, uid_vars_chr = uid_vars_chr)
+  data_tb <- serious::add_new_uid(data_tb,  drop_old_uids_1L_lgl = T, arrange_by_1L_chr = "Date", imputed_uid_pfx_chr = imputed_uid_pfx_chr, recode_1L_lgl = T, uid_pfx_1L_chr = uid_pfx_1L_chr, uid_vars_chr = uid_vars_chr)
   data_tb <- data_tb %>% serious::add_tenure(date_var_1L_chr = "Date", tenure_var_1L_chr = "Tenure", uid_var_1L_chr = "UID", unit_1L_chr = "year")
   if(is.null(severity_args_ls)){
     severity_args_ls <- make_severity_args_ls(disciplines_ls = list(disciplines_1L_lgl), sessions_ls = list(sessions_moderate_int), names_chr = character(0), severity_var_1L_chr = severity_var_1L_chr)
@@ -644,7 +644,7 @@ make_linked_ds <- function(datasets_ls = NULL,
                   Service, !!rlang::sym(provider_id_1L_chr),  !!rlang::sym(provider_location_1L_chr), Activity, Appointments, Cancellations, Referrals, Cost,
                   Weekday, Week, Quarter, Year, FiscalQuarter, FiscalYear,
                   dplyr::everything()) %>%
-    dplyr::arrange(UID)
+    dplyr::arrange(UID, Date)
   data_tb <- data_tb %>% dplyr::mutate(Date = Date %>% format() %>% stringr::str_sub(end=10) %>% lubridate::ymd())
   if(!keep_all_1L_lgl){
     data_tb <- data_tb %>% dplyr::select(-c("Para/Able", "Annual appointments", "Annual DE Psychology Appointments", "Annual Dietetics Appointments",
@@ -672,7 +672,7 @@ make_linked_ds <- function(datasets_ls = NULL,
     #                 ~  .x %>% add_episodes(separation_after_dbl = separation_after_dbl[.y], end_date_dtm = end_date_dtm, episodes_vars_chr = episodes_vars_ls[[.y]], unit_1L_chr = unit_1L_chr))
     # X <- X %>% add_disengaged(date_1L_chr = disengage_cut_off_1L_chr)
     X@ds_tb <- X@ds_tb %>%
-      dplyr::arrange(UID) %>%
+      dplyr::arrange(UID, Date) %>%
       dplyr::select(UID, Date,
                     Referrer, Tenure, #Disengaged,
                     Role,  Sex, Age, Categorisation, Para,  Aesthetic, Individual, Winter,
