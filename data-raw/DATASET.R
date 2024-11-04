@@ -30,8 +30,7 @@ x <- ready4fun::make_pkg_desc_ls(pkg_title_1L_chr = "Analyse Health Data For Ath
                                                                         "get_raw_data",
                                                                         "make_linked_ds",
                                                                         "make_service_use_vars",
-                                                                        "make_severity_args_ls",
-                                                                        "update_data_dict")),##
+                                                                        "make_severity_args_ls")),##
   dev_pkgs_chr = c(#"cmdstanr",
     #"ready4",#"ready4fun",
     "ready4use",

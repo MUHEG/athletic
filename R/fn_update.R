@@ -1,38 +1,3 @@
-#' Update data dictionary
-#' @description update_data_dict() is an Update function that edits an object, while preserving core object attributes. Specifically, this function implements an algorithm to update data dictionary. The function is called for its side effects and does not return a value.
-#' @param X_Ready4useDyad PARAM_DESCRIPTION, Default: ready4use::Ready4useDyad()
-#' @param dictionary_lups_ls Dictionary lookup tables (a list), Default: make_dictionary_lups()
-#' @param arrange_by_1L_chr Arrange by (a character vector of length one), Default: c("category", "name")
-#' @return X (A dataset and data dictionary pair.)
-#' @rdname update_data_dict
-#' @export 
-#' @importFrom ready4use Ready4useDyad
-#' @importFrom purrr reduce
-#' @importFrom ready4show manufacture.ready4show_correspondences
-#' @importFrom dplyr mutate arrange filter
-#' @importFrom rlang sym
-update_data_dict <- function (X_Ready4useDyad = ready4use::Ready4useDyad(), dictionary_lups_ls = make_dictionary_lups(), 
-    arrange_by_1L_chr = c("category", "name")) 
-{
-    arrange_by_1L_chr <- match.arg(arrange_by_1L_chr)
-    X_Ready4useDyad <- 1:length(dictionary_lups_ls) %>% purrr::reduce(.init = X_Ready4useDyad, 
-        ~{
-            var_1L_chr <- names(dictionary_lups_ls)[.y]
-            values_lup <- dictionary_lups_ls[[.y]]
-            values_chr <- ready4show::manufacture.ready4show_correspondences(values_lup, 
-                .x@dictionary_r3$var_nm_chr, flatten_1L_lgl = T)
-            renewSlot(.x, "dictionary_r3", .x@dictionary_r3 %>% 
-                dplyr::mutate(`:=`(!!rlang::sym(var_1L_chr), 
-                  values_chr)))
-        })
-    X_Ready4useDyad@dictionary_r3 <- X_Ready4useDyad@dictionary_r3 %>% 
-        dplyr::arrange(!!rlang::sym(ifelse(arrange_by_1L_chr == 
-            "name", "var_nm_chr", "var_ctg_chr")), !!rlang::sym(ifelse(arrange_by_1L_chr == 
-            "name", "var_ctg_chr", "var_nm_chr")))
-    X_Ready4useDyad@dictionary_r3 <- X_Ready4useDyad@dictionary_r3 %>% 
-        dplyr::filter(var_nm_chr %in% names(X_Ready4useDyad@ds_tb))
-    return(X_Ready4useDyad)
-}
 #' Update fake ages
 #' @description update_fake_ages() is an Update function that edits an object, while preserving core object attributes. Specifically, this function implements an algorithm to update fake ages. The function returns Ages (a character vector).
 #' @param ages_chr Ages (a character vector)

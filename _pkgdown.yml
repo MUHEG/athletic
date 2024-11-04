@@ -25,4 +25,3 @@ reference:
   - make_linked_ds
   - make_service_use_vars
   - make_severity_args_ls
-  - update_data_dict

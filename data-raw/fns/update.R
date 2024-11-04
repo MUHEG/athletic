@@ -1,28 +1,28 @@
-update_data_dict <- function(X_Ready4useDyad = ready4use::Ready4useDyad(),
-                             dictionary_lups_ls = make_dictionary_lups(),
-                             arrange_by_1L_chr = c("category",
-                                                   "name")){
-  arrange_by_1L_chr <- match.arg(arrange_by_1L_chr)
-  X_Ready4useDyad <- 1:length(dictionary_lups_ls) %>%
-    purrr::reduce(.init = X_Ready4useDyad,
-                  ~ {
-                    var_1L_chr <- names(dictionary_lups_ls)[.y]
-                    values_lup <- dictionary_lups_ls[[.y]]
-                    values_chr <- ready4show::manufacture.ready4show_correspondences(values_lup, .x@dictionary_r3$var_nm_chr, flatten_1L_lgl = T)
-                    renewSlot(.x,
-                              "dictionary_r3",
-                              .x@dictionary_r3 %>% dplyr::mutate(!!rlang::sym(var_1L_chr) := values_chr))
-
-                  })
-  X_Ready4useDyad@dictionary_r3 <- X_Ready4useDyad@dictionary_r3 %>%
-    dplyr::arrange(!!rlang::sym(ifelse(arrange_by_1L_chr ==
-                                         "name", "var_nm_chr", "var_ctg_chr")),
-                   !!rlang::sym(ifelse(arrange_by_1L_chr ==
-                                         "name", "var_ctg_chr", "var_nm_chr")))
-  X_Ready4useDyad@dictionary_r3 <- X_Ready4useDyad@dictionary_r3 %>%
-    dplyr::filter(var_nm_chr %in% names(X_Ready4useDyad@ds_tb))
-  return(X_Ready4useDyad)
-}
+# update_data_dict <- function(X_Ready4useDyad = ready4use::Ready4useDyad(),
+#                              dictionary_lups_ls = make_dictionary_lups(),
+#                              arrange_by_1L_chr = c("category",
+#                                                    "name")){
+#   arrange_by_1L_chr <- match.arg(arrange_by_1L_chr)
+#   X_Ready4useDyad <- 1:length(dictionary_lups_ls) %>%
+#     purrr::reduce(.init = X_Ready4useDyad,
+#                   ~ {
+#                     var_1L_chr <- names(dictionary_lups_ls)[.y]
+#                     values_lup <- dictionary_lups_ls[[.y]]
+#                     values_chr <- ready4show::manufacture.ready4show_correspondences(values_lup, .x@dictionary_r3$var_nm_chr, flatten_1L_lgl = T)
+#                     renewSlot(.x,
+#                               "dictionary_r3",
+#                               .x@dictionary_r3 %>% dplyr::mutate(!!rlang::sym(var_1L_chr) := values_chr))
+#
+#                   })
+#   X_Ready4useDyad@dictionary_r3 <- X_Ready4useDyad@dictionary_r3 %>%
+#     dplyr::arrange(!!rlang::sym(ifelse(arrange_by_1L_chr ==
+#                                          "name", "var_nm_chr", "var_ctg_chr")),
+#                    !!rlang::sym(ifelse(arrange_by_1L_chr ==
+#                                          "name", "var_ctg_chr", "var_nm_chr")))
+#   X_Ready4useDyad@dictionary_r3 <- X_Ready4useDyad@dictionary_r3 %>%
+#     dplyr::filter(var_nm_chr %in% names(X_Ready4useDyad@ds_tb))
+#   return(X_Ready4useDyad)
+# }
 update_fake_ages <- function(ages_chr){
   ages_chr <- ages_chr %>%
     stringr::str_replace_all("16-20","16-19") %>%
