@@ -851,9 +851,10 @@ make_rename_lup <- function ()
         ready4show::renew.ready4show_correspondences(old_nms_chr = c("HP Staff (excluding coaches)", 
             "female", "male", "0-15 years", "16-19 years", "20-24 years", 
             "25-29 years", "30-34 years", "35 years and over", 
-            "Other HP staff member"), new_nms_chr = c("Other HP", 
-            "Female", "Male", "0-15", "16-19", "20-24", "25-29", 
-            "30-34", "35 + ", "Other HP"))
+            "Other HP staff member", "Podium Potential and above"), 
+            new_nms_chr = c("Other HP", "Female", "Male", "0-15", 
+                "16-19", "20-24", "25-29", "30-34", "35 + ", 
+                "Other HP", "Podium Potential+"))
     return(lup_ready4show_correspondences)
 }
 #' Make service use variables

@@ -819,12 +819,12 @@ make_rename_lup <- function(){
                                                                  "20-24 years", "25-29 years",
                                                                  "30-34 years",
                                                                  "35 years and over",
-                                                                 "Other HP staff member"),
+                                                                 "Other HP staff member", "Podium Potential and above"),
                                                  new_nms_chr = c("Other HP", "Female", "Male", "0-15","16-19",
                                                                  "20-24", "25-29",
                                                                  "30-34",
                                                                  "35 + ",
-                                                                 "Other HP"))
+                                                                 "Other HP", "Podium Potential+"))
   return(lup_ready4show_correspondences)
 
 }
