@@ -481,6 +481,67 @@ make_fake_clients <- function (datasets_ls = NULL, add_sports_1L_lgl = T, age_va
         start_date_1L_chr)
     return(clients_tb)
 }
+#' Make focused arguments
+#' @description make_focused_args() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make focused arguments. The function returns Focused arguments (a list).
+#' @param activity_1L_chr Activity (a character vector of length one), Default: 'Activity'
+#' @param athlete_roles_chr Athlete roles (a character vector), Default: c("Athlete", "AlumniAthlete")
+#' @param appointments_var_1L_chr Appointments variable (a character vector of length one), Default: 'Appointments'
+#' @param cancellations_var_1L_chr Cancellations variable (a character vector of length one), Default: 'Cancellations'
+#' @param clinical_team_1L_chr Clinical team (a character vector of length one), Default: 'Clinical Team'
+#' @param clinician_1L_chr Clinician (a character vector of length one), Default: 'Clinician'
+#' @param clinician_discipline_1L_chr Clinician discipline (a character vector of length one), Default: 'Service'
+#' @param components_chr Components (a character vector), Default: c("Year", "Quarter", "Week")
+#' @param cost_var_1L_chr Cost variable (a character vector of length one), Default: 'Cost'
+#' @param date_tfmn_fn Date transformation (a function), Default: identity
+#' @param days_1L_chr Days (a character vector of length one), Default: 'Weekday'
+#' @param duration_1L_chr Duration (a character vector of length one), Default: 'Duration'
+#' @param exclude_chr Exclude (a character vector), Default: 'Group'
+#' @param fiscal_start_1L_int Fiscal start (an integer vector of length one), Default: 7
+#' @param group_1L_chr Group (a character vector of length one), Default: character(0)
+#' @param index_1L_chr Index (a character vector of length one), Default: 'Date'
+#' @param is_wide_1L_lgl Is wide (a logical vector of length one), Default: F
+#' @param key_vars_chr Key variables (a character vector), Default: character(0)
+#' @param metrics_chr Metrics (a character vector), Default: make_metric_vars()
+#' @param referrals_var_1L_chr Referrals variable (a character vector of length one), Default: 'Referrals'
+#' @param referrers_1L_chr Referrers (a character vector of length one), Default: 'Referrer Role'
+#' @param severity_1L_chr Severity (a character vector of length one), Default: 'Severity'
+#' @param team_disciplines_1L_chr Team disciplines (a character vector of length one), Default: 'Disciplines'
+#' @param uid_var_1L_chr Unique identifier variable (a character vector of length one), Default: 'UID'
+#' @param what_1L_chr What (a character vector of length one), Default: c("all", "totals")
+#' @return Focused arguments (a list)
+#' @rdname make_focused_args
+#' @export 
+#' @keywords internal
+make_focused_args <- function (activity_1L_chr = "Activity", athlete_roles_chr = c("Athlete", 
+    "AlumniAthlete"), appointments_var_1L_chr = "Appointments", 
+    cancellations_var_1L_chr = "Cancellations", clinical_team_1L_chr = "Clinical Team", 
+    clinician_1L_chr = "Clinician", clinician_discipline_1L_chr = "Service", 
+    components_chr = c("Year", "Quarter", "Week"), cost_var_1L_chr = "Cost", 
+    date_tfmn_fn = identity, days_1L_chr = "Weekday", duration_1L_chr = "Duration", 
+    exclude_chr = "Group", fiscal_start_1L_int = 7L, group_1L_chr = character(0), 
+    index_1L_chr = "Date", is_wide_1L_lgl = F, key_vars_chr = character(0), 
+    metrics_chr = make_metric_vars(), referrals_var_1L_chr = "Referrals", 
+    referrers_1L_chr = "Referrer Role", severity_1L_chr = "Severity", 
+    team_disciplines_1L_chr = "Disciplines", uid_var_1L_chr = "UID", 
+    what_1L_chr = c("all", "totals")) 
+{
+    what_1L_chr <- match.arg(what_1L_chr)
+    focused_args_ls <- list(activity_1L_chr = activity_1L_chr, 
+        athlete_roles_chr = athlete_roles_chr, appointments_var_1L_chr = appointments_var_1L_chr, 
+        cancellations_var_1L_chr = cancellations_var_1L_chr, 
+        clinical_team_1L_chr = clinical_team_1L_chr, clinician_1L_chr = clinician_1L_chr, 
+        clinician_discipline_1L_chr = clinician_discipline_1L_chr, 
+        components_chr = components_chr, cost_var_1L_chr = cost_var_1L_chr, 
+        date_tfmn_fn = date_tfmn_fn, days_1L_chr = days_1L_chr, 
+        duration_1L_chr = duration_1L_chr, exclude_chr = exclude_chr, 
+        group_1L_chr = group_1L_chr, index_1L_chr = index_1L_chr, 
+        is_wide_1L_lgl = is_wide_1L_lgl, key_vars_chr = key_vars_chr, 
+        metrics_chr = metrics_chr, referrals_var_1L_chr = referrals_var_1L_chr, 
+        referrers_1L_chr = referrers_1L_chr, severity_1L_chr = severity_1L_chr, 
+        team_disciplines_1L_chr = team_disciplines_1L_chr, uid_var_1L_chr = uid_var_1L_chr, 
+        what_1L_chr = what_1L_chr)
+    return(focused_args_ls)
+}
 #' Make keepers
 #' @description make_keepers() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make keepers. The function returns Keep (a character vector).
 #' @param names_chr Names (a character vector)
@@ -581,25 +642,36 @@ make_keys_dss <- function (data_tb, key_vars_chr, activity_1L_chr = "Activity",
             weekly = tsibble::yearweek, monthly = tsibble::yearmonth, 
             quarterly = tsibble::yearquarter, yearly = lubridate::year)
     }
+    focused_args_ls <- make_focused_args(activity_1L_chr = activity_1L_chr, 
+        athlete_roles_chr = athlete_roles_chr, appointments_var_1L_chr = appointments_var_1L_chr, 
+        cancellations_var_1L_chr = cancellations_var_1L_chr, 
+        clinical_team_1L_chr = clinical_team_1L_chr, clinician_1L_chr = clinician_1L_chr, 
+        clinician_discipline_1L_chr = clinician_discipline_1L_chr, 
+        components_chr = components_chr, cost_var_1L_chr = cost_var_1L_chr, 
+        days_1L_chr = days_1L_chr, duration_1L_chr = duration_1L_chr, 
+        exclude_chr = exclude_chr, group_1L_chr = group_1L_chr, 
+        index_1L_chr = index_1L_chr, metrics_chr = c(referrals_var_1L_chr, 
+            appointments_var_1L_chr, cancellations_var_1L_chr, 
+            cost_var_1L_chr), referrals_var_1L_chr = referrals_var_1L_chr, 
+        referrers_1L_chr = referrers_1L_chr, severity_1L_chr = severity_1L_chr, 
+        team_disciplines_1L_chr = team_disciplines_1L_chr, uid_var_1L_chr = uid_var_1L_chr, 
+        what_1L_chr = "all")
     selected_ls <- fns_ls %>% purrr::keep_at(periods_chr)
     totals_dss_ls <- selected_ls %>% purrr::map(~{
+        iteration_args_ls <- focused_args_ls
         date_tfmn_fn <- .x
-        key_vars_chr %>% purrr::map(~data_tb %>% serious::transform_to_tsibble(activity_1L_chr = activity_1L_chr, 
-            athlete_roles_chr = athlete_roles_chr, appointments_var_1L_chr = appointments_var_1L_chr, 
-            cancellations_var_1L_chr = cancellations_var_1L_chr, 
-            clinical_team_1L_chr = clinical_team_1L_chr, clinician_1L_chr = clinician_1L_chr, 
-            clinician_discipline_1L_chr = clinician_discipline_1L_chr, 
-            components_chr = components_chr, cost_var_1L_chr = cost_var_1L_chr, 
-            date_tfmn_fn = date_tfmn_fn, days_1L_chr = days_1L_chr, 
-            duration_1L_chr = duration_1L_chr, exclude_chr = exclude_chr, 
-            group_1L_chr = group_1L_chr, index_1L_chr = index_1L_chr, 
-            is_wide_1L_lgl = F, key_vars_chr = .x, metrics_chr = c(referrals_var_1L_chr, 
-                appointments_var_1L_chr, cancellations_var_1L_chr, 
-                cost_var_1L_chr), referrals_var_1L_chr = referrals_var_1L_chr, 
-            referrers_1L_chr = referrers_1L_chr, severity_1L_chr = severity_1L_chr, 
-            team_disciplines_1L_chr = team_disciplines_1L_chr, 
-            type_1L_chr = "focused", uid_var_1L_chr = uid_var_1L_chr)) %>% 
-            stats::setNames(key_vars_chr)
+        iteration_args_ls$date_tfmn_fn <- date_tfmn_fn
+        iteration_args_ls
+        key_vars_chr %>% purrr::map(~{
+            innerloop_args_ls <- iteration_args_ls
+            innerloop_args_ls$key_vars_chr <- .x
+            data_tb %>% serious::transform_to_tsibble(date_tfmn_fn = date_tfmn_fn, 
+                focused_args_ls = focused_args_ls, focused_fn = transform_to_focused_tsb, 
+                index_1L_chr = index_1L_chr, key_vars_chr = .x, 
+                metrics_chr = c(referrals_var_1L_chr, appointments_var_1L_chr, 
+                  cancellations_var_1L_chr, cost_var_1L_chr), 
+                type_1L_chr = "focused")
+        }) %>% stats::setNames(key_vars_chr)
     }) %>% stats::setNames(names(selected_ls))
     return(totals_dss_ls)
 }
@@ -1090,7 +1162,7 @@ make_totals_dss <- function (data_tb, activity_1L_chr = "Activity", athlete_role
     selected_ls <- fns_ls %>% purrr::keep_at(periods_chr)
     totals_dss_ls <- selected_ls %>% purrr::map(~{
         date_tfmn_fn <- .x
-        data_tb %>% serious::transform_to_tsibble(activity_1L_chr = activity_1L_chr, 
+        focused_args_ls <- make_focused_args(activity_1L_chr = activity_1L_chr, 
             athlete_roles_chr = athlete_roles_chr, appointments_var_1L_chr = appointments_var_1L_chr, 
             cancellations_var_1L_chr = cancellations_var_1L_chr, 
             clinical_team_1L_chr = clinical_team_1L_chr, clinician_1L_chr = clinician_1L_chr, 
@@ -1099,13 +1171,17 @@ make_totals_dss <- function (data_tb, activity_1L_chr = "Activity", athlete_role
             date_tfmn_fn = date_tfmn_fn, days_1L_chr = days_1L_chr, 
             duration_1L_chr = duration_1L_chr, exclude_chr = exclude_chr, 
             group_1L_chr = group_1L_chr, index_1L_chr = index_1L_chr, 
-            is_wide_1L_lgl = F, key_vars_chr = character(0), 
-            metrics_chr = c(referrals_var_1L_chr, appointments_var_1L_chr, 
-                cancellations_var_1L_chr, cost_var_1L_chr), referrals_var_1L_chr = referrals_var_1L_chr, 
+            is_wide_1L_lgl = F, metrics_chr = c(referrals_var_1L_chr, 
+                appointments_var_1L_chr, cancellations_var_1L_chr, 
+                cost_var_1L_chr), referrals_var_1L_chr = referrals_var_1L_chr, 
             referrers_1L_chr = referrers_1L_chr, severity_1L_chr = severity_1L_chr, 
             team_disciplines_1L_chr = team_disciplines_1L_chr, 
-            uid_var_1L_chr = uid_var_1L_chr, type_1L_chr = "focused", 
-            what_1L_chr = "totals")
+            uid_var_1L_chr = uid_var_1L_chr, what_1L_chr = "totals")
+        data_tb %>% serious::transform_to_tsibble(date_tfmn_fn = date_tfmn_fn, 
+            focused_args_ls = focused_args_ls, focused_fn = transform_to_focused_tsb, 
+            index_1L_chr = index_1L_chr, key_vars_chr = character(0), 
+            metrics_chr = c(referrals_var_1L_chr, appointments_var_1L_chr, 
+                cancellations_var_1L_chr, cost_var_1L_chr), type_1L_chr = "focused")
     }) %>% stats::setNames(names(selected_ls))
     return(totals_dss_ls)
 }
@@ -1159,6 +1235,21 @@ make_wide_dss <- function (data_tb, activity_1L_chr = "Activity", athlete_roles_
     selected_ls <- fns_ls %>% purrr::keep_at(periods_chr)
     wide_dss_ls <- selected_ls %>% purrr::map(~{
         date_tfmn_fn <- .x
+        focused_args_ls <- make_focused_args(activity_1L_chr = activity_1L_chr, 
+            athlete_roles_chr = athlete_roles_chr, appointments_var_1L_chr = appointments_var_1L_chr, 
+            cancellations_var_1L_chr = cancellations_var_1L_chr, 
+            clinical_team_1L_chr = clinical_team_1L_chr, clinician_1L_chr = clinician_1L_chr, 
+            clinician_discipline_1L_chr = clinician_discipline_1L_chr, 
+            components_chr = components_chr, cost_var_1L_chr = cost_var_1L_chr, 
+            date_tfmn_fn = date_tfmn_fn, days_1L_chr = days_1L_chr, 
+            duration_1L_chr = duration_1L_chr, exclude_chr = exclude_chr, 
+            group_1L_chr = group_1L_chr, index_1L_chr = index_1L_chr, 
+            is_wide_1L_lgl = T, key_vars_chr = key_vars_chr, 
+            metrics_chr = c(referrals_var_1L_chr, appointments_var_1L_chr, 
+                cancellations_var_1L_chr, cost_var_1L_chr), referrals_var_1L_chr = referrals_var_1L_chr, 
+            referrers_1L_chr = referrers_1L_chr, severity_1L_chr = severity_1L_chr, 
+            team_disciplines_1L_chr = team_disciplines_1L_chr, 
+            uid_var_1L_chr = uid_var_1L_chr, what_1L_chr = "all")
         data_tb %>% transform_to_prep(activity_1L_chr = activity_1L_chr, 
             appointments_var_1L_chr = appointments_var_1L_chr, 
             cancellations_var_1L_chr = cancellations_var_1L_chr, 
@@ -1171,23 +1262,12 @@ make_wide_dss <- function (data_tb, activity_1L_chr = "Activity", athlete_roles_
             referrers_1L_chr = referrers_1L_chr, severity_1L_chr = severity_1L_chr, 
             team_disciplines_1L_chr = team_disciplines_1L_chr, 
             uid_var_1L_chr = uid_var_1L_chr, what_1L_chr = "wide") %>% 
-            serious::transform_to_tsibble(activity_1L_chr = activity_1L_chr, 
-                athlete_roles_chr = athlete_roles_chr, appointments_var_1L_chr = appointments_var_1L_chr, 
-                cancellations_var_1L_chr = cancellations_var_1L_chr, 
-                clinical_team_1L_chr = clinical_team_1L_chr, 
-                clinician_1L_chr = clinician_1L_chr, clinician_discipline_1L_chr = clinician_discipline_1L_chr, 
-                components_chr = components_chr, cost_var_1L_chr = cost_var_1L_chr, 
-                date_tfmn_fn = date_tfmn_fn, days_1L_chr = days_1L_chr, 
-                duration_1L_chr = duration_1L_chr, exclude_chr = exclude_chr, 
-                group_1L_chr = group_1L_chr, index_1L_chr = index_1L_chr, 
-                is_wide_1L_lgl = T, key_vars_chr = key_vars_chr, 
+            serious::transform_to_tsibble(date_tfmn_fn = date_tfmn_fn, 
+                index_1L_chr = index_1L_chr, focused_args_ls = focused_args_ls, 
+                focused_fn = transform_to_focused_tsb, key_vars_chr = key_vars_chr, 
                 metrics_chr = c(referrals_var_1L_chr, appointments_var_1L_chr, 
                   cancellations_var_1L_chr, cost_var_1L_chr), 
-                referrals_var_1L_chr = referrals_var_1L_chr, 
-                referrers_1L_chr = referrers_1L_chr, severity_1L_chr = severity_1L_chr, 
-                team_disciplines_1L_chr = team_disciplines_1L_chr, 
-                uid_var_1L_chr = uid_var_1L_chr, type_1L_chr = "focused", 
-                what_1L_chr = "all")
+                type_1L_chr = "focused")
     }) %>% stats::setNames(names(selected_ls))
     return(wide_dss_ls)
 }
