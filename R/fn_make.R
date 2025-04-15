@@ -966,6 +966,8 @@ make_keys_dss <- function (data_tb, key_vars_chr, activity_1L_chr = "Activity",
 #' @param keep_all_1L_lgl Keep all (a logical vector of length one), Default: FALSE
 #' @param missing_1L_chr Missing (a character vector of length one), Default: '0'
 #' @param path_1L_chr Path (a character vector of length one), Default: character(0)
+#' @param price_indices_dbl Price indices (a double vector), Default: numeric(0)
+#' @param price_ref_1L_int Price reference (an integer vector of length one), Default: 1
 #' @param provider_id_1L_chr Provider identity (a character vector of length one), Default: 'ProviderID'
 #' @param provider_location_1L_chr Provider location (a character vector of length one), Default: 'ProviderState'
 #' @param referrals_cols_int Referrals columns (an integer vector), Default: 4:7
@@ -984,7 +986,7 @@ make_keys_dss <- function (data_tb, key_vars_chr, activity_1L_chr = "Activity",
 #' @export 
 #' @importFrom lubridate ymd
 #' @importFrom dplyr bind_rows arrange mutate case_when rename select everything
-#' @importFrom serious add_temporal_vars add_new_uid add_tenure add_cumulatives add_episodes make_episodes_vars
+#' @importFrom serious add_temporal_vars add_new_uid add_tenure update_for_price_year add_cumulatives add_episodes make_episodes_vars
 #' @importFrom ready4use add_from_lup_prototype Ready4useDyad add_dictionary
 #' @importFrom rlang syms sym
 #' @importFrom stringr str_sub
@@ -992,9 +994,10 @@ make_keys_dss <- function (data_tb, key_vars_chr, activity_1L_chr = "Activity",
 make_linked_ds <- function (datasets_ls = NULL, disciplines_1L_lgl = TRUE, end_date_dtm = lubridate::ymd("2024-06-30"), 
     exclude_chr = c("Cost", "Duration"), imputed_uid_pfx_chr = "UNK", 
     keep_all_1L_lgl = FALSE, missing_1L_chr = "0", path_1L_chr = character(0), 
-    provider_id_1L_chr = "ProviderID", provider_location_1L_chr = "ProviderState", 
-    referrals_cols_int = 4:7, separation_after_dbl = 3, sessions_moderate_int = c(4, 
-        15), severity_args_ls = NULL, severity_var_1L_chr = "Severity", 
+    price_indices_dbl = numeric(0), price_ref_1L_int = 1L, provider_id_1L_chr = "ProviderID", 
+    provider_location_1L_chr = "ProviderState", referrals_cols_int = 4:7, 
+    separation_after_dbl = 3, sessions_moderate_int = c(4, 15), 
+    severity_args_ls = NULL, severity_var_1L_chr = "Severity", 
     sheets_int = 1:5, uid_pfx_1L_chr = "CID", uid_vars_chr = c("MedlinksID", 
         "AISID"), unit_1L_chr = "month", var_ctg_chr = character(0), 
     what_1L_chr = c("table", "dyad")) 
@@ -1034,6 +1037,8 @@ make_linked_ds <- function (datasets_ls = NULL, disciplines_1L_lgl = TRUE, end_d
         "0-15 years", TRUE ~ Age))
     data_tb <- add_imputed_costs(data_tb, arrange_by_1L_chr = "Date", 
         provider_id_1L_chr = provider_id_1L_chr)
+    data_tb <- data_tb %>% serious::update_for_price_year(price_indices_dbl = price_indices_dbl, 
+        price_ref_1L_int = price_ref_1L_int)
     data_tb <- data_tb %>% dplyr::rename(Referrer = `Referrer Role`, 
         Aesthetic = `Aesthetic Sports`, Individual = `Individual Sports`, 
         Winter = `Winter Sports`)

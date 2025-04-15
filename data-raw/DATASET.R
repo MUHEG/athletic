@@ -47,8 +47,7 @@ x <- ready4fun::make_pkg_desc_ls(pkg_title_1L_chr = "Analyse Health Data For Ath
   zenodo_badge_1L_chr = "[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11043502.svg)](https://doi.org/10.5281/zenodo.11043502)"#
   )
 y <- ready4class::ready4class_constructor()
-z <- ready4pack::make_pt_ready4pack_manifest(x,
-                                             constructor_r3 = y) %>%
+z <- ready4pack::make_pt_ready4pack_manifest(x, constructor_r3 = y) %>%
   ready4pack::ready4pack_manifest()
 z <- ready4::author(z)
 #ready4::write_extra_pkgs_to_actions(path_to_dir_1L_chr = ".github/workflows", consent_1L_chr = "Y")

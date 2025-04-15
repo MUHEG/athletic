@@ -13,6 +13,8 @@ make_linked_ds(
   keep_all_1L_lgl = FALSE,
   missing_1L_chr = "0",
   path_1L_chr = character(0),
+  price_indices_dbl = numeric(0),
+  price_ref_1L_int = 1L,
   provider_id_1L_chr = "ProviderID",
   provider_location_1L_chr = "ProviderState",
   referrals_cols_int = 4:7,
@@ -44,6 +46,10 @@ make_linked_ds(
 \item{missing_1L_chr}{Missing (a character vector of length one), Default: '0'}
 
 \item{path_1L_chr}{Path (a character vector of length one), Default: character(0)}
+
+\item{price_indices_dbl}{Price indices (a double vector), Default: numeric(0)}
+
+\item{price_ref_1L_int}{Price reference (an integer vector of length one), Default: 1}
 
 \item{provider_id_1L_chr}{Provider identity (a character vector of length one), Default: 'ProviderID'}
 

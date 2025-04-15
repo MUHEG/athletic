@@ -847,14 +847,11 @@ make_keys_dss <- function(data_tb,
                                        clinician_discipline_1L_chr = clinician_discipline_1L_chr,
                                        components_chr = components_chr,
                                        cost_var_1L_chr = cost_var_1L_chr,
-                                       # date_tfmn_fn = identity,
                                        days_1L_chr = days_1L_chr,
                                        duration_1L_chr = duration_1L_chr,
                                        exclude_chr = exclude_chr,
                                        group_1L_chr = group_1L_chr,
                                        index_1L_chr = index_1L_chr,
-                                       # is_wide_1L_lgl = F,
-                                       # key_vars_chr = character(0),
                                        metrics_chr = c(referrals_var_1L_chr, appointments_var_1L_chr, cancellations_var_1L_chr, cost_var_1L_chr),
                                        referrals_var_1L_chr = referrals_var_1L_chr,
                                        referrers_1L_chr = referrers_1L_chr,
@@ -878,7 +875,6 @@ make_keys_dss <- function(data_tb,
             focused_args_ls = focused_args_ls,
             focused_fn = transform_to_focused_tsb,
             index_1L_chr = index_1L_chr,
-            # is_wide_1L_lgl = F, ###
             key_vars_chr = .x, ###
             metrics_chr = c(referrals_var_1L_chr, appointments_var_1L_chr, cancellations_var_1L_chr, cost_var_1L_chr),
             type_1L_chr = "focused"
@@ -898,123 +894,124 @@ make_key_vars <- function(add_chr = character(0),
     key_vars_chr <- sort(key_vars_chr)
   return(key_vars_chr)
 }
-make_linked_ds <- function(datasets_ls = NULL,
-                           disciplines_1L_lgl = TRUE,
-                           end_date_dtm = lubridate::ymd("2024-06-30"),
-                           #disengage_cut_off_1L_chr = "2024-01-01",
-                           exclude_chr = c("Cost","Duration"),
-                           imputed_uid_pfx_chr = "UNK",
-                           keep_all_1L_lgl = FALSE,
-                           missing_1L_chr = "0",
-                           #names_chr = character(0),
-                           path_1L_chr = character(0),
-                           provider_id_1L_chr = "ProviderID",
-                           provider_location_1L_chr = "ProviderState",
-                           referrals_cols_int = 4:7,
-                           separation_after_dbl = 3,
-                           sessions_moderate_int = c(4,15),#7,14. 7,12/ And two tier <=10, >10
-                           severity_args_ls = NULL,
-                           severity_var_1L_chr = "Severity",
-                           sheets_int = 1:5,
-                           uid_pfx_1L_chr = "CID",
-                           uid_vars_chr = c("MedlinksID", "AISID"),
-                           unit_1L_chr = "month",
-                           var_ctg_chr = character(0),
-                           what_1L_chr = c("table", "dyad")){
+make_linked_ds <- function (datasets_ls = NULL,
+                            disciplines_1L_lgl = TRUE,
+                            end_date_dtm = lubridate::ymd("2024-06-30"),
+                            exclude_chr = c("Cost", "Duration"),
+                            imputed_uid_pfx_chr = "UNK",
+                            keep_all_1L_lgl = FALSE,
+                            missing_1L_chr = "0",
+                            path_1L_chr = character(0),
+                            price_indices_dbl = numeric(0),
+                            price_ref_1L_int = 1L,
+                            provider_id_1L_chr = "ProviderID",
+                            provider_location_1L_chr = "ProviderState",
+                            referrals_cols_int = 4:7,
+                            separation_after_dbl = 3,
+                            sessions_moderate_int = c(4, 15),
+                            severity_args_ls = NULL,
+                            severity_var_1L_chr = "Severity",
+                            sheets_int = 1:5,
+                            uid_pfx_1L_chr = "CID",
+                            uid_vars_chr = c("MedlinksID",
+                                             "AISID"),
+                            unit_1L_chr = "month",
+                            var_ctg_chr = character(0),
+                            what_1L_chr = c("table", "dyad")) {
   what_1L_chr <- match.arg(what_1L_chr)
-  if(is.null(datasets_ls)){
+  if (is.null(datasets_ls)) {
     datasets_ls <- get_raw_data(path_1L_chr = path_1L_chr,
-                                referrals_cols_int = referrals_cols_int,
-                                sheets_int = sheets_int)
+                                referrals_cols_int = referrals_cols_int, sheets_int = sheets_int)
   }
-  datasets_ls <- update_ingested_data(datasets_ls,
-                                      categories_chr = c("Individual Sports", "Aesthetic Sports", "Winter Sports"),
-                                      exclude_chr = exclude_chr,
-                                      imputed_uid_pfx_chr = imputed_uid_pfx_chr,
-                                      missing_1L_chr = missing_1L_chr,
-                                      provider_id_1L_chr = provider_id_1L_chr,
-                                      provider_location_1L_chr = provider_location_1L_chr,
+  datasets_ls <- update_ingested_data(datasets_ls, categories_chr = c("Individual Sports",
+                                                                      "Aesthetic Sports", "Winter Sports"), exclude_chr = exclude_chr,
+                                      imputed_uid_pfx_chr = imputed_uid_pfx_chr, missing_1L_chr = missing_1L_chr,
+                                      provider_id_1L_chr = provider_id_1L_chr, provider_location_1L_chr = provider_location_1L_chr,
                                       uid_vars_chr = uid_vars_chr)
-  data_tb <- dplyr::bind_rows(datasets_ls$appointments, datasets_ls$cancellations, datasets_ls$referrals) %>% dplyr::arrange(Date)
-  data_tb <- serious::add_temporal_vars(data_tb, date_var_1L_chr = "Date", fiscal_start_1L_int = 7L)
-  data_tb <- serious::add_new_uid(data_tb,  drop_old_uids_1L_lgl = T, arrange_by_1L_chr = "Date", imputed_uid_pfx_chr = imputed_uid_pfx_chr, recode_1L_lgl = T, uid_pfx_1L_chr = uid_pfx_1L_chr, uid_vars_chr = uid_vars_chr)
-  data_tb <- data_tb %>% serious::add_tenure(date_var_1L_chr = "Date", tenure_var_1L_chr = "Tenure", uid_var_1L_chr = "UID", unit_1L_chr = "year")
-  if(is.null(severity_args_ls)){
-    severity_args_ls <- make_severity_args_ls(disciplines_ls = list(disciplines_1L_lgl), sessions_ls = list(sessions_moderate_int), names_chr = character(0), severity_var_1L_chr = severity_var_1L_chr)
+  data_tb <- dplyr::bind_rows(datasets_ls$appointments, datasets_ls$cancellations,
+                              datasets_ls$referrals) %>% dplyr::arrange(Date)
+  data_tb <- serious::add_temporal_vars(data_tb, date_var_1L_chr = "Date",
+                                        fiscal_start_1L_int = 7L)
+  data_tb <- serious::add_new_uid(data_tb, drop_old_uids_1L_lgl = T,
+                                  arrange_by_1L_chr = "Date", imputed_uid_pfx_chr = imputed_uid_pfx_chr,
+                                  recode_1L_lgl = T, uid_pfx_1L_chr = uid_pfx_1L_chr, uid_vars_chr = uid_vars_chr)
+  data_tb <- data_tb %>% serious::add_tenure(date_var_1L_chr = "Date",
+                                             tenure_var_1L_chr = "Tenure", uid_var_1L_chr = "UID",
+                                             unit_1L_chr = "year")
+  if (is.null(severity_args_ls)) {
+    severity_args_ls <- make_severity_args_ls(disciplines_ls = list(disciplines_1L_lgl),
+                                              sessions_ls = list(sessions_moderate_int), names_chr = character(0),
+                                              severity_var_1L_chr = severity_var_1L_chr)
   }
-  severity_vars_chr <- names(severity_args_ls$sessions_ls) # make_severity_vars(severity_args_ls, severity_var_1L_chr = severity_var_1L_chr)
-  data_tb <- data_tb %>% add_severity(#disciplines_1L_lgl = disciplines_1L_lgl,
-    provider_var_1L_chr = provider_id_1L_chr, #sessions_moderate_int = sessions_moderate_int,
-    severity_args_ls = severity_args_ls, severity_var_1L_chr = severity_var_1L_chr)
-  data_tb <- data_tb %>%
-    dplyr::mutate(Sex = dplyr::case_when(Sex=="Non-Binary" ~ NA_character_, TRUE ~ Sex),
-                  `Referrer Role` = dplyr::case_when(`Referrer Role` == "." ~ NA_character_, TRUE ~ `Referrer Role`)) %>%
-    dplyr::mutate(Age = dplyr::case_when(Age == "≥35 years" ~ "35 years and over",
-                                         Age == "<16 years" ~ "0-15 years",
-                                         TRUE ~ Age))
-  data_tb <- add_imputed_costs(data_tb, arrange_by_1L_chr = "Date", provider_id_1L_chr = provider_id_1L_chr)
-  data_tb <- data_tb %>% dplyr::rename(Referrer =  `Referrer Role`,
-                                       Aesthetic = `Aesthetic Sports`,
-                                       Individual = `Individual Sports`,
+  severity_vars_chr <- names(severity_args_ls$sessions_ls)
+  data_tb <- data_tb %>% add_severity(provider_var_1L_chr = provider_id_1L_chr,
+                                      severity_args_ls = severity_args_ls, severity_var_1L_chr = severity_var_1L_chr)
+  data_tb <- data_tb %>% dplyr::mutate(Sex = dplyr::case_when(Sex ==
+                                                                "Non-Binary" ~ NA_character_, TRUE ~ Sex), `Referrer Role` = dplyr::case_when(`Referrer Role` ==
+                                                                                                                                                "." ~ NA_character_, TRUE ~ `Referrer Role`)) %>% dplyr::mutate(Age = dplyr::case_when(Age ==
+                                                                                                                                                                                                                                         "≥35 years" ~ "35 years and over", Age == "<16 years" ~
+                                                                                                                                                                                                                                         "0-15 years", TRUE ~ Age))
+  data_tb <- add_imputed_costs(data_tb, arrange_by_1L_chr = "Date",
+                               provider_id_1L_chr = provider_id_1L_chr)
+  data_tb <- data_tb %>% serious::update_for_price_year(price_indices_dbl = price_indices_dbl,
+                                                        price_ref_1L_int = price_ref_1L_int)
+  data_tb <- data_tb %>% dplyr::rename(Referrer = `Referrer Role`,
+                                       Aesthetic = `Aesthetic Sports`, Individual = `Individual Sports`,
                                        Winter = `Winter Sports`)
-  data_tb <- data_tb %>%
-    ready4use::add_from_lup_prototype(#arrange_1L_chr = "Date",
-      match_var_nm_1L_chr = "UID",
-      method_1L_chr = "sample",
-      vars_chr = c("Referrer", "Role", "Sex", "Age", "Categorisation", "Para",  "Aesthetic", "Individual", "Winter"),
-      type_1L_chr = "self")
-  data_tb <- data_tb %>%
-    dplyr::select(UID, Date,
-                  Referrer, Tenure, Role, Sex, Age, Categorisation, Para, Aesthetic, Individual, Winter,
-                  !!!rlang::syms(severity_vars_chr),#Severity,
-                  Service, !!rlang::sym(provider_id_1L_chr),  !!rlang::sym(provider_location_1L_chr), Activity, Appointments, Cancellations, Referrals, Cost,
-                  Weekday, Week, Quarter, Year, FiscalQuarter, FiscalYear,
-                  dplyr::everything()) %>%
-    dplyr::arrange(UID, Date)
-  data_tb <- data_tb %>% dplyr::mutate(Date = Date %>% format() %>% stringr::str_sub(end=10) %>% lubridate::ymd())
-  if(!keep_all_1L_lgl){
-    data_tb <- data_tb %>% dplyr::select(-c("Para/Able", "Annual appointments", "Annual DE Psychology Appointments", "Annual Dietetics Appointments",
-                                            "Annual Psychiatry Appointments", "Annual Psychology Appointments", "Annual Disciplines", "Annual Providers" ))
+  data_tb <- data_tb %>% ready4use::add_from_lup_prototype(match_var_nm_1L_chr = "UID",
+                                                           method_1L_chr = "sample", vars_chr = c("Referrer", "Role",
+                                                                                                  "Sex", "Age", "Categorisation", "Para", "Aesthetic",
+                                                                                                  "Individual", "Winter"), type_1L_chr = "self")
+  data_tb <- data_tb %>% dplyr::select(UID, Date, Referrer,
+                                       Tenure, Role, Sex, Age, Categorisation, Para, Aesthetic,
+                                       Individual, Winter, !!!rlang::syms(severity_vars_chr),
+                                       Service, !!rlang::sym(provider_id_1L_chr), !!rlang::sym(provider_location_1L_chr),
+                                       Activity, Appointments, Cancellations, Referrals, Cost,
+                                       Weekday, Week, Quarter, Year, FiscalQuarter, FiscalYear,
+                                       dplyr::everything()) %>% dplyr::arrange(UID, Date)
+  data_tb <- data_tb %>% dplyr::mutate(Date = Date %>% format() %>%
+                                         stringr::str_sub(end = 10) %>% lubridate::ymd())
+  if (!keep_all_1L_lgl) {
+    data_tb <- data_tb %>% dplyr::select(-c("Para/Able",
+                                            "Annual appointments", "Annual DE Psychology Appointments",
+                                            "Annual Dietetics Appointments", "Annual Psychiatry Appointments",
+                                            "Annual Psychology Appointments", "Annual Disciplines",
+                                            "Annual Providers"))
   }
-  if(what_1L_chr == "dyad"){
+  if (what_1L_chr == "dyad") {
     X <- ready4use::Ready4useDyad(ds_tb = data_tb)
-    if(identical(var_ctg_chr, character(0))){
-      # Logic needs ammending when keep_all_1L_lgl==TRUE
-      var_ctg_chr <- c("Identifier", "Temporal", rep("Healthcare",2),
-                       rep("Demographic",3), rep("Sporting",5),
-                       rep("Clinical", length(severity_vars_chr)),
-                       rep("Healthcare", 2), "Spatial", rep("Healthcare",5),
-                       rep("Temporal",10)
-      )
+    if (identical(var_ctg_chr, character(0))) {
+      var_ctg_chr <- c("Identifier", "Temporal", rep("Healthcare",
+                                                     2), rep("Demographic", 3), rep("Sporting", 5),
+                       rep("Clinical", length(severity_vars_chr)), rep("Healthcare",
+                                                                       2), "Spatial", rep("Healthcare", 5), rep("Temporal",
+                                                                                                                10))
     }
     X <- ready4use::add_dictionary(X, var_ctg_chr = var_ctg_chr)
-    X <- X %>% serious::add_cumulatives(metrics_chr = c("Appointments", "Cancellations", "Referrals",  "Cost"),
-                                        arrange_by_1L_chr = "Date",
+    X <- X %>% serious::add_cumulatives(metrics_chr = c("Appointments",
+                                                        "Cancellations", "Referrals", "Cost"), arrange_by_1L_chr = "Date",
                                         group_by_1L_chr = "UID")
-    X <- X %>% serious::add_episodes(separation_after_dbl = separation_after_dbl, end_date_dtm = end_date_dtm, unit_1L_chr = unit_1L_chr)
-    episodes_vars_ls <- serious::make_episodes_vars(separation_after_dbl = separation_after_dbl, flatten_1L_lgl = F)#1:length(separation_after_dbl) %>% purrr::map(~make_episodes_vars(suffix_1L_chr = ifelse(.x==1,"",paste0("_",LETTERS[.x-1]))))
-    # X <- 1:length(separation_after_dbl) %>%
-    #   purrr::reduce(.init = X,
-    #                 ~  .x %>% add_episodes(separation_after_dbl = separation_after_dbl[.y], end_date_dtm = end_date_dtm, episodes_vars_chr = episodes_vars_ls[[.y]], unit_1L_chr = unit_1L_chr))
-    # X <- X %>% add_disengaged(date_1L_chr = disengage_cut_off_1L_chr)
-    X@ds_tb <- X@ds_tb %>%
-      dplyr::arrange(UID, Date) %>%
-      dplyr::select(UID, Date,
-                    Referrer, Tenure, #Disengaged,
-                    Role,  Sex, Age, Categorisation, Para,  Aesthetic, Individual, Winter,
-                    !!!rlang::syms(severity_vars_chr),#Severity,
-                    Service, !!rlang::sym(provider_id_1L_chr),  !!rlang::sym(provider_location_1L_chr), Activity,
-                    !!!rlang::syms(episodes_vars_ls %>% purrr::map_chr(~.x[2])),#Episodes,
-                    Appointments, Cancellations, Referrals,  Cost,
-                    !!!rlang::syms(episodes_vars_ls %>% purrr::map_chr(~.x[3])),#Separations,
-                    !!!rlang::syms(episodes_vars_ls %>% purrr::map_chr(~.x[1])),#Active,
-                    paste0("Cumulative", c(episodes_vars_ls %>% purrr::map_chr(~.x[2]),
-                                           "Appointments", "Cancellations", "Referrals",  "Cost",
-                                           episodes_vars_ls %>% purrr::map_chr(~.x[3]))),
+    X <- X %>% serious::add_episodes(separation_after_dbl = separation_after_dbl,
+                                     end_date_dtm = end_date_dtm, unit_1L_chr = unit_1L_chr)
+    episodes_vars_ls <- serious::make_episodes_vars(separation_after_dbl = separation_after_dbl,
+                                                    flatten_1L_lgl = F)
+    X@ds_tb <- X@ds_tb %>% dplyr::arrange(UID, Date) %>%
+      dplyr::select(UID, Date, Referrer, Tenure, Role,
+                    Sex, Age, Categorisation, Para, Aesthetic, Individual,
+                    Winter, !!!rlang::syms(severity_vars_chr), Service,
+                    !!rlang::sym(provider_id_1L_chr), !!rlang::sym(provider_location_1L_chr),
+                    Activity, !!!rlang::syms(episodes_vars_ls %>%
+                                               purrr::map_chr(~.x[2])), Appointments, Cancellations,
+                    Referrals, Cost, !!!rlang::syms(episodes_vars_ls %>%
+                                                      purrr::map_chr(~.x[3])), !!!rlang::syms(episodes_vars_ls %>%
+                                                                                                purrr::map_chr(~.x[1])), paste0("Cumulative",
+                                                                                                                                c(episodes_vars_ls %>% purrr::map_chr(~.x[2]),
+                                                                                                                                  "Appointments", "Cancellations", "Referrals",
+                                                                                                                                  "Cost", episodes_vars_ls %>% purrr::map_chr(~.x[3]))),
                     dplyr::everything())
-
     data_xx <- X
-  }else{
+  }
+  else {
     data_xx <- data_tb
   }
   return(data_xx)
