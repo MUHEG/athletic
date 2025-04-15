@@ -1,10 +1,10 @@
 Package: athletic
 Title: Analyse Health Data for Athletes and Sports Support Staff
-Version: 0.0.0.9018
+Version: 0.0.0.9019
 Authors@R: c(
     person("Matthew", "Hamilton", , "matthew.hamilton1@monash.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7407-9194")),
-    person("Fikru", "Rizal", , "fikru.rizal@monash.edu", role = c("aut", "cre"),
+    person("Fikru", "Rizal", , "fikru.rizal@monash.edu", role = "aut",
            comment = c(ORCID = "0000-0002-0064-3255")),
     person("Monash University", role = "cph")
   )
