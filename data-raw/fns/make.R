@@ -1,3 +1,248 @@
+make_betas_plot <- function(data_ls, #ath_coef_plot
+                            alpha_1L_dbl = 1,
+                            bar_width_1L_dbl = 0.25,
+                            colours_chr = NULL,
+                            dot_size_1L_dbl = 2.5,
+                            drop_var_1_chr = NULL,
+                            drop_var_2_chr = NULL,
+                            gap_1L_dbl = 0.1,
+                            grouping_1L_lgl = FALSE,
+                            hline_xx = ggplot2::geom_hline(yintercept=0, colour = "grey40"),
+                            keep_var_1_chr = NULL, keep_var_2_chr = NULL,
+                            labels_chr = NULL,
+                            legend_name_1L_chr = "Models",
+                            line_size_1L_dbl = 0.5,
+                            line_width_1L_dbl = 0,
+                            plot_type_1L_chr = "dot",
+                            point_shapes_int = NULL,
+                            reference_row_1L_lgl = TRUE,
+                            shade_1L_lgl = FALSE,
+                            style_1L_chr = "lancet",
+                            theme_choice_xx = ggplot2::theme_classic(base_family = "Arial Narrow"),
+                            title_1L_chr = NULL,
+                            type_1L_chr = "ggsci",
+                            vertical_1L_lgl = FALSE,
+                            wrap_width_1L_dbl = 8,
+                            x_label_1L_chr = "",
+                            y_label_1L_chr = "Estimates and 95% CIs") {
+
+  # Initialize an empty ggplot object
+  plot_plt <- ggplot2::ggplot()
+  # Conditionally add the hline if hline is not NULL
+  if (!is.null(hline_xx)) {
+    plot_plt <- plot_plt + hline_xx
+  }
+  # Define the reference x positions based on unique labels in the first dataset
+  reference_labels_chr <- unique(data_ls[[1]]$label)
+  reference_x_positions_chr <- stats::setNames(1:length(reference_labels_chr), reference_labels_chr)
+  # Calculate the centered offset based on the number of datasets
+  n_datasets_1L_int <- length(data_ls)
+  center_offset_1L_dbl <- (n_datasets_1L_int - 1) / 2  # Center point for even/odd numbers of datasets
+  # Get the original order of `var_label` values from the first dataset
+  original_var_order_chr <- unique(data_ls[[1]]$var_label)
+  # Ensure colours is a list of appropriate length
+  colours_chr <- ready4use::get_colour_codes(n_datasets_1L_int, manual_chr = colours_chr, style_1L_chr = style_1L_chr, type_1L_chr = type_1L_chr)
+  # Ensure labels is a list of appropriate length
+  if (is.null(labels_chr)) {
+    labels_chr <- paste0("Model ", seq_len(n_datasets_1L_int))  # Default labels if labels is NULL
+  } else if (length(labels) < n_datasets_1L_int) {
+    labels_chr <- c(labels_chr, paste0("Model ", seq_len(n_datasets_1L_int - length(labels_chr))))  # Fill with default labels
+  }
+  # Set label_colours using updated colours and labels
+  labels_colours_chr <- stats::setNames(colours_chr[1:n_datasets_1L_int], labels_chr[1:n_datasets_1L_int])
+  # Ensure point_shapes is a list of appropriate length
+  if (is.null(point_shapes_int)) {
+    point_shapes_int <- rep(16, n_datasets_1L_int)  # Default to shape 16 if not provided
+  } else if (length(point_shapes_int) < n_datasets_1L_int) {
+    point_shapes_int <- c(point_shapes_int, rep(16, n_datasets_1L_int - length(point_shapes_int)))  # Fill with default
+  }
+  # Loop through each dataset in the list
+  for (i in seq_along(data_ls)) {
+    data_tb <- data_ls[[i]]
+    model_label <- names(labels_colours_chr)[i]  # Use the model's name as label
+    main_color <- labels_colours_chr[model_label]
+    shape_1L_int <- point_shapes_int[[i]]  # Assign shape for each dataset
+    # Drop and filter conditions as before
+    if (!is.null(drop_var_1_chr)) data_tb <- data_tb[!data_tb$term %in% drop_var_1_chr, ]
+    if (!is.null(drop_var_2_chr)) data_tb <- data_tb[!data_tb$variable %in% drop_var_2_chr, ]
+    if (!is.null(keep_var_1_chr)) data_tb <- data_tb[data_tb$term %in% keep_var_1_chr, ]
+    if (!is.null(keep_var_2_chr)) data_tb <- data_tb[data_tb$variable %in% keep_var_2_chr, ]
+    if (!reference_row_1L_lgl) data_tb <- data_tb[!data_tb$reference_row_lgl, ]
+
+    # Map labels and adjust x positions
+    data_tb$x_position <- as.numeric(reference_x_positions_chr[as.character(data_tb$label)]) + (i - 1 - center_offset_1L_dbl) * gap_1L_dbl
+    data_tb$model <- factor(model_label, levels = model_label)
+    data_tb <- data_tb %>% mutate(var_label = factor(var_label, levels = original_var_order_chr))
+
+    # Add shaded area or error bars based on shade argument
+    if (shade_1L_lgl && plot_type_1L_chr != "bar") {
+      plot_plt <- plot_plt +
+        ggplot2::geom_ribbon(
+          data = data_tb,
+          mapping = ggplot2::aes(x = x_position, ymin = conf.low, ymax = conf.high, fill = model),
+          alpha = alpha_1L_dbl * 0.3, color = NA
+        )
+    } else if (!shade_1L_lgl) {
+      plot_plt <- plot_plt +
+        ggplot2::geom_errorbar(
+          data = data_tb,
+          mapping = ggplot2::aes(x = x_position, ymin = conf.low, ymax = conf.high, color = model),
+          size = line_size_1L_dbl, color = colorspace::lighten(main_color, 0.2), width = line_width_1L_dbl
+        )
+    }
+
+    # Main plot type with customizable point shape for each dataset
+    if (plot_type_1L_chr == "dot") {
+      plot_plt <- plot_plt +
+        ggplot2::geom_point(
+          data = data_tb,
+          mapping = ggplot2::aes(x = x_position, y = estimate, color = model),
+          size = dot_size_1L_dbl,
+          shape = shape_1L_int,  # Use shape for each dataset
+          alpha = alpha_1L_dbl
+        )
+
+    } else if (plot_type_1L_chr == "connected") {
+      plot_plt <- plot_plt +
+        ggplot2::geom_line(
+          data = data_tb,
+          mapping = ggplot2::aes(x = x_position, y = estimate, color = model, group = model),
+          size = line_size_1L_dbl, alpha = alpha_1L_dbl
+        ) +
+        ggplot2::geom_point(
+          data = data_tb,
+          mapping = ggplot2::aes(x = x_position, y = estimate, color = model),
+          size = dot_size_1L_dbl, shape = shape_1L_int, alpha = alpha_1L_dbl
+        )
+
+    } else if (plot_type_1L_chr == "bar") {
+      plot_plt <- plot_plt +
+        ggplot2::geom_bar(
+          data = data_tb,
+          mapping = ggplot2::aes(x = x_position, y = estimate, fill = model),
+          stat = "identity", width = bar_width_1L_dbl, alpha = alpha_1L_dbl,
+          position = position_dodge(width = gap_1L_dbl)
+        )
+    }
+  }
+
+  # Create a unified color and fill scale for the legend
+  legend_scale <- list(
+    ggplot2::scale_color_manual(values = labels_colours_chr, name = legend_name_1L_chr),
+    ggplot2::scale_fill_manual(values = labels_colours_chr, name = legend_name_1L_chr)
+  )
+
+  # Add axis labels, title, and legend scale to the plot
+  plot_plt <- plot_plt +
+    ggplot2::scale_x_continuous(
+      breaks = reference_x_positions_chr,
+      labels = function(labels) stringr::str_wrap(names(reference_x_positions_chr), width = wrap_width_1L_dbl),
+      expand = c(0, gap_1L_dbl * 2)
+    ) +
+    ggplot2::scale_y_continuous(labels = scales::comma, n.breaks = 6) +
+    legend_scale +
+    ggplot2::theme(panel.grid.minor = element_blank()) +
+    ggplot2::labs(x = x_label_1L_chr, y = y_label_1L_chr, title = title_1L_chr)
+
+  # Conditionally add facet_grid based on grouping_1L_lgl and apply theme adjustments
+  if (grouping_1L_lgl) {
+    if (vertical_1L_lgl) {
+      plot_plt <- plot_plt +
+        ggplot2::facet_grid(rows = vars(var_label), scales = "free", switch = "y", space = "free_y") +
+        ggplot2::coord_flip() +
+        theme_choice_xx +
+        ggplot2::theme(strip.placement = "outside", strip.background = ggplot2::element_blank(),
+                       strip.text.y.left = ggplot2::element_text(angle = 0))
+    } else {
+      plot_plt <- plot_plt +
+        ggplot2::facet_grid(. ~ var_label, scales = "free", switch = "x", space = "free_x") +
+        theme_choice_xx +
+        ggplot2::theme(strip.placement = "outside", strip.background = ggplot2::element_blank())
+    }
+  } else if (vertical_1L_lgl) {
+    plot_plt <- plot_plt + ggplot2::coord_flip() + theme_choice_xx
+  } else {
+    plot_plt <- plot_plt + theme_choice_xx
+  }
+  return(plot_plt)
+}
+make_betas_tbls_ls <- function(models_ls, labels_ls, indices_int = NULL, element_names_chr = NULL) { #ath_coef_tbl
+
+  # Only subset models_ls if necessary
+  if (!is.null(element_names_chr) || !is.null(indices_int)) {
+    models_ls <- models_ls[intersect(names(models_ls), element_names_chr)][indices_int]
+  }
+
+  # Transform models with tidy_plus_plus using vapply for efficiency if structure is consistent
+  transformed_tables_ls <- lapply(models_ls, function(model_mdl) {
+    broom.helpers::tidy_plus_plus(model_mdl, variable_labels = labels_ls)
+  })
+
+  return(transformed_tables_ls)
+}
+make_clinical_vars <- function(activity_1L_chr = "Activity",
+                               clinical_team_1L_chr = "Clinical Team",
+                               clinician_1L_chr = "Clinician",
+                               clinician_discipline_1L_chr = "Service",
+                               duration_1L_chr = "Duration",
+                               exclude_chr = character(0),
+                               referrers_1L_chr = "Referrer Role",
+                               severity_1L_chr = "Severity",
+                               team_disciplines_1L_chr = "Disciplines"){
+
+  clinical_vars_chr <- c(referrers_1L_chr, team_disciplines_1L_chr, clinical_team_1L_chr, clinician_discipline_1L_chr, clinician_1L_chr, activity_1L_chr, duration_1L_chr, severity_1L_chr)
+  if(!identical(exclude_chr, character(0))){
+    clinical_vars_chr <- setdiff(clinical_vars_chr, exclude_chr)
+  }
+  return(clinical_vars_chr)
+}
+make_continuous_dss_ls <- function(datasets_ls, outcomes_chr, vars_chr, method_1L_chr = "mean", labels_ls = NULL, tab_spanner_chr = NULL) { # ath_tbl_cont_merge_perDataset
+  # Loop over each outcome to create merged tables
+  merged_tables_ls <- lapply(datasets_ls, function(ds_tb) {
+
+    # Generate tables for each dataset
+    tables_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+      make_continuous_smry(data_tb = ds_tb, outcome_1L_chr = rlang::sym(outcome_1L_chr),
+                           vars_chr = vars_chr, method_1L_chr = method_1L_chr, labels_ls = labels_ls)
+    })
+
+    # Merge tables with specified tab spanner for each dataset
+    gtsummary::tbl_merge(tbls = tables_ls, tab_spanner = tab_spanner_chr)
+
+  }) %>% stats::setNames(names(datasets_ls))
+
+  # Return the list of merged tables for each outcome
+  return(merged_tables_ls)
+}
+make_continuous_smry <- function(data_tb, outcome_1L_chr, vars_chr, method_1L_chr = "mean", labels_ls = NULL, pval_method_1L_chr = NULL, pval_1L_lgl = TRUE) { # ath_tbl_continuous
+  # Define summary stat type (mean or median) for continuous vars
+  statistic_continuous_1L_chr <- switch(method_1L_chr,
+                                        "mean" = "{mean} ({sd})",
+                                        "median" = "{median} ({p25} - {p75})",
+                                        stop("Invalid method. Choose 'mean' or 'median'."))
+
+  # Define default p-value method if not provided
+  if (is.null(pval_method_1L_chr)) {
+    pval_method_1L_chr <- if (method_1L_chr == "mean") "oneway.test" else "kruskal.test"
+  }
+
+  # Generate summary table (excluding all subjects)
+  table_xx <- data_tb %>%
+    gtsummary::tbl_continuous(
+      variable = {{ outcome_1L_chr }},
+      statistic = ~statistic_continuous_1L_chr,
+      include = vars_chr,
+      label = labels_ls
+    )
+
+  # Conditionally add p-values
+  if (pval_1L_lgl) {
+    table_xx <- table_xx %>%
+      gtsummary::add_p(test = vars_chr ~ pval_method_1L_chr)
+  }
+  # Return table
+  return(table_xx)
+}
 make_dictionary_lups <- function(periods_chr = paste0("Year",1:3),
                                  period_1L_chr = "Year"){
   category_lup <- tibble::tribble(~ old_nms_chr, ~ new_nms_chr,
@@ -86,10 +331,10 @@ make_dictionary_lups <- function(periods_chr = paste0("Year",1:3),
                                      "Separations_6", "Number of separations made on this date - sensitivity definition",
                                      "Service", "Type of clinical service provided",
                                      "Tenure", "Total length of time between index service activity and latest service activity",
-                                     "UID", "Unique identifier or MHRN client",
+                                     "UID", "Unique identifier",
                                      "ProviderState", "State and Territory of the provider of the clinical service",
                                      "Aesthetic", "Involved in an aesthetic sport",
-                                     "Categorisation", "AIS sporting categorisation",
+                                     "Categorisation", "Sporting categorisation",
                                      "Individual", "Involved in an individual sport",
                                      "Para", "A para-athlete",
                                      "Winter", "Involved in a winter sport",
@@ -465,22 +710,6 @@ make_fake_clients <- function(datasets_ls = NULL,
   return(clients_tb)
 
 }
-make_clinical_vars <- function(activity_1L_chr = "Activity",
-                               clinical_team_1L_chr = "Clinical Team",
-                               clinician_1L_chr = "Clinician",
-                               clinician_discipline_1L_chr = "Service",
-                               duration_1L_chr = "Duration",
-                               exclude_chr = character(0),
-                               referrers_1L_chr = "Referrer Role",
-                               severity_1L_chr = "Severity",
-                               team_disciplines_1L_chr = "Disciplines"){
-
-  clinical_vars_chr <- c(referrers_1L_chr, team_disciplines_1L_chr, clinical_team_1L_chr, clinician_discipline_1L_chr, clinician_1L_chr, activity_1L_chr, duration_1L_chr, severity_1L_chr)
-  if(!identical(exclude_chr, character(0))){
-    clinical_vars_chr <- setdiff(clinical_vars_chr, exclude_chr)
-  }
-  return(clinical_vars_chr)
-}
 make_focused_args <- function(activity_1L_chr = "Activity",
                               athlete_roles_chr = c("Athlete", "AlumniAthlete"),
                               appointments_var_1L_chr = "Appointments",
@@ -534,6 +763,34 @@ make_focused_args <- function(activity_1L_chr = "Activity",
     what_1L_chr = what_1L_chr
   )
   return(focused_args_ls)
+}
+make_grouped_boxplot_ls <- function(plot_data_ls, outcomes_chr, labels_ls) { # ath_boxplot_group
+  plots_ls <- list()
+
+  for (outcome_1L_chr in outcomes_chr) {
+    outcome_label_1L_chr <- labels_ls[[outcome_1L_chr]]
+
+    plots_ls[[outcome_1L_chr]] <- list(
+      "Age and Sex" =
+        ggpubr::ggarrange(
+          plotlist = plot_data_ls[[outcome_1L_chr]][c("Age_alt", "Sex")],
+          nrow = 1, widths = c(2, 1)
+        ) %>% ggpubr::annotate_figure(top = outcome_label_1L_chr) ,
+
+      "Role and Provider State" =
+        ggpubr::ggarrange(
+          plotlist = plot_data_ls[[outcome_1L_chr]][c("Role", "ProviderState")],
+          nrow = 2
+        ) %>% ggpubr::annotate_figure(top = outcome_label_1L_chr),
+
+      "Others" =
+        ggpubr::ggarrange(
+          plotlist = plot_data_ls[[outcome_1L_chr]][c("Aesthetic", "Individual", "Para", "Winter")],
+          nrow = 1
+        ) %>% ggpubr::annotate_figure(top = outcome_label_1L_chr)
+    )
+  }
+  return(plots_ls)
 }
 make_keepers <- function(names_chr,
                          clinical_vars_chr = make_clinical_vars(),
@@ -762,6 +1019,79 @@ make_linked_ds <- function(datasets_ls = NULL,
   }
   return(data_xx)
 }
+make_mdl_outcomes_ds_ls <- function(datasets_ls, outcomes_chr, predictors_1L_chr) { #ath_ols_loop_Data_Outcome
+  dataset_ls <- lapply(datasets_ls, function(ds_tb) {
+    # Run regressions over each outcome
+    outcome_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+      # Construct the formula
+      formula_fml <- as.formula(paste(outcome_1L_chr, "~", predictors_1L_chr))
+
+      # Run the regression and store the result
+      estimatr::lm_robust(formula_fml, data = ds_tb, se_type = "HC1")
+    }) %>% stats::setNames(outcomes_chr)
+    outcome_ls
+  }) %>% setNames(names(datasets_ls))
+
+  # Return list
+  return(dataset_ls)
+}
+make_mdl_predictors_ds_ls <- function(ds_tb,
+                                      # dataset_1L_chr,
+                                      outcomes_chr, predictors_chr) { #ath_ols_loop_Outcome_Predictor
+  dataset_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+    outcome_ls <- lapply(predictors_chr, function(predictor) {
+      formula <- as.formula(paste(outcome_1L_chr, "~", predictor))
+
+      estimatr::lm_robust(formula, data = ds_tb, se_type = "HC1")
+    }) %>% setNames(predictors_chr)
+    outcome_ls
+  }) %>% setNames(outcomes_chr)
+
+  # Return list
+  return(dataset_ls)
+}
+make_mdl_smry_tbl <- function(model_mdl, add_glance_1L_lgl = TRUE, statistic_1L_chr = "Coef (SE)", labels_ls = NULL) { #ath_ols_format
+  table_xx <- model_mdl %>%
+    gtsummary::tbl_regression(label = labels_ls) %>%  # Pass custom labels here
+    gtsummary::add_significance_stars(             # Modify p-value stars & show only coef (SE)
+      pattern = "{estimate} ({std.error}){stars}",
+      hide_ci = TRUE, hide_se = TRUE,
+      thresholds = c(0.01, 0.05, 0.1)
+    ) %>%
+    gtsummary::modify_header(                      # Modify column name
+      label ~ "**Characteristic**",
+      estimate ~ paste0("**", statistic_1L_chr, "**")
+    )
+  if(add_glance_1L_lgl){
+    table_xx <- table_xx   %>%
+      gtsummary::add_glance_table(include = c("nobs", "adj.r.squared")) # Add number of observations & adj r squared
+  }
+  table_xx <- table_xx   %>%
+    gtsummary::modify_footnote(gtsummary::everything() ~ NA, abbreviation = TRUE)
+  return(table_xx)
+}
+make_merged_continuous_smry <- function(datasets_ls, outcomes_chr, vars_chr, method_1L_chr = "mean",
+                                        labels_ls = NULL, tab_spanner_chr = NULL, pval_1L_lgl=TRUE, pval_method_1L_chr=NULL) { #ath_tbl_cont_merge_perOutcome
+  merged_tables_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+    tables_ls <- lapply(datasets_ls, function(ds_tb) {
+      make_continuous_smry(data_tb = ds_tb, outcome_1L_chr = rlang::sym(outcome_1L_chr),
+                           vars_chr = vars_chr, method_1L_chr = method_1L_chr, pval_1L_lgl = pval_1L_lgl , pval_method_1L_chr = pval_method_1L_chr, labels_ls = labels_ls)
+    })
+    gtsummary::tbl_merge(tbls = tables_ls, tab_spanner = tab_spanner_chr)
+
+  }) %>% stats::setNames(outcomes_chr)
+  return(merged_tables_ls)
+}
+make_merged_mdl_tbl <- function(models_ls, statistics_ls = NULL, tab_spanner_chr = NULL, labels_ls = NULL) { #
+
+  # Loop over models and their names
+  tables_ls <- lapply(seq_along(models), function(i) {
+    make_mdl_smry_tbl(model_mdl = models_ls[[i]], statistic_1L_chr = statistics_ls[i], labels_ls = labels_ls)
+  })
+  # Merged table
+  merged_table <- gtsummary::tbl_merge(tbls = tables_ls, tab_spanner = tab_spanner_chr)
+  return(merged_table)
+}
 make_modelling_dss <- function(data_tb,
                                activity_1L_chr = "Activity",
                                athlete_roles_chr = c("Athlete", "AlumniAthlete"),
@@ -882,6 +1212,172 @@ make_modelling_dss <- function(data_tb,
                   wide_dss_ls = wide_dss_ls)
   return(dss_lss)
 }
+make_nested_boxplot_ls <- function(dataset_type_1L_chr = "complete",
+                                   datasets_ls,
+                                   outcomes_ls,
+                                   predictors_ls) { # ath_boxplot_data
+  boxplot_ls_ls <- list(
+    # Cumulative
+    all = make_outcomes_boxplots(
+      data_tb = datasets_ls$all_tb,
+      # get(paste0("X1_", dataset_type_1L_chr)), #
+      outcomes_chr = outcome_all, #
+      predictors_chr = predictors_chr, #
+      labels_ls = labels_ls
+    ),
+
+    # Year 1
+    year1 = make_outcomes_boxplots(
+      data_tb = datasets_ls$year_1_tb,
+      # get(paste0("X1_", dataset_type_1L_chr, "_1y"))
+      , #
+      outcomes_chr = outcome_1y, #
+      predictors_chr = predictors_chr, #
+      labels_ls = labels_ls
+    ),
+
+    # Year 2
+    year2 = make_outcomes_boxplots(
+      data_tb = datasets_ls$year_2_tb,
+      # get(paste0("X1_", dataset_type_1L_chr, "_2y")), #
+      outcomes_chr = outcome_2y, #
+      predictors_chr = predictors_chr, #
+      labels_ls = labels_ls
+    )
+  )
+  return(boxplot_ls_ls)
+}
+make_outcomes_boxplots <- function(outcomes_chr, predictors_chr, data_tb, labels_ls = NULL, palette_1L_chr ="lancet") { #ath_boxplot_outcome
+  scale_fill_fn <- ready4use::get_journal_palette_fn("fill", what_1L_chr = palette_1L_chr)
+  boxplot_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+    lapply(predictors_chr, function(predictor_1L_chr) {
+      data_tb %>%
+        ggplot2::ggplot(ggplot2::aes(x = .data[[predictor_1L_chr]], y = .data[[outcome_1L_chr]], fill = .data[[predictor_1L_chr]])) +
+        ggplot2::geom_boxplot(varwidth = TRUE, alpha = 0.8) +
+        ggplot2::theme_classic() +
+        scale_fill_fn() +
+        ggplot2::theme(legend.position = "none",
+                       panel.background = element_blank(),
+                       panel.grid.major.x = element_blank(),
+                       panel.grid.major.y = element_blank(),
+                       panel.grid.minor.x = element_blank()) +
+        ggplot2::scale_y_continuous(labels = scales::comma,
+                                    breaks = scales::breaks_pretty(6)) +
+        ggplot2::labs(
+          x = if (!is.null(labels_ls)) labels_ls[[predictor_1L_chr]] else predictor_1L_chr,
+          y = if (!is.null(labels_ls)) labels_ls[[outcome_1L_chr]] else outcome_1L_chr,
+          fill = if (!is.null(labels_ls)) labels_ls[[predictor_1L_chr]] else predictor_1L_chr
+        )
+    }) %>% setNames(predictors_chr)
+  }) %>% setNames(outcomes_chr)
+
+  return(boxplots_ls)
+}
+make_processed_providers_dss_ls <- function(data_tb) {
+  # Step 1: Collapse to provider outcome/service use
+  P_outcome_tb <- data_tb %>%
+    dplyr::group_by(ProviderID, ProviderState) %>%
+    dplyr::summarise(
+      dplyr::across(c(Appointments, Cost, Referrals, Cancellations,
+                      Episodes, Episodes_6, Separations, Separations_6), # Cumulative outcomes/uses
+                    ~ sum(.x, na.rm = FALSE)),
+      dplyr::across(c(Service, ServDEP, ServDiet, ServPsych, ServPsyco), # Type of services
+                    ~ max(.x, na.rm = FALSE)),
+      DateStart = min(Date, na.rm = TRUE),
+      DateEnd = max(Date, na.rm = TRUE)
+    ) %>%
+    dplyr::ungroup()
+
+  # Step 2: Collapse to provider-client level
+  P_individual_tb <- data_tb %>%
+    dplyr::group_by(ProviderID, ProviderState, UID) %>%
+    dplyr::summarise(
+      dplyr::across(c(Tenure_years, Active, Active_6,
+                      RefSelf, RoleAth, SexFem, Age35o, Age20l, Para, Aesthetic, Individual, Winter,
+                      RefSelf_M, RoleAth_M, SexFem_M, Age35o_M, Age20l_M, Para_M, Aesthetic_M, Individual_M, Winter_M),
+                    ~ max(.x, na.rm = FALSE))
+    )
+
+  # Step 3: Collapse to provider level
+  P_char_tb <- P_individual_tb %>%
+    dplyr::group_by(ProviderID, ProviderState) %>%
+    dplyr::summarise(
+      NClients = dplyr::n_distinct(UID),
+      dplyr::across(c(Tenure_years, Active, Active_6,
+                      RefSelf, RoleAth, SexFem, Age35o, Age20l, Para, Aesthetic, Individual, Winter,
+                      RefSelf_M, RoleAth_M, SexFem_M, Age35o_M, Age20l_M, Para_M, Aesthetic_M, Individual_M, Winter_M),
+                    ~ mean(.x, na.rm = FALSE))
+    )
+
+  # Step 4: Merge with provider outcome
+  P_all_tb <- P_char_tb %>%
+    dplyr::left_join(P_outcome_tb, by = c("ProviderID", "ProviderState")) %>%
+    dplyr::filter(!is.na(ProviderID)) %>%
+    dplyr::ungroup() %>%
+    tibble::as_tibble()
+
+  # Step 5: Define service type
+  P_all_tb <- P_all_tb %>%
+    dplyr::mutate(Service = dplyr::if_else(ServPsyco == 1, "Psychology", Service),
+                  Service = dplyr::if_else(ServDEP == 1, "DE Psychology", Service),
+                  Service = dplyr::if_else(ServDiet == 1, "Dietetics", Service),
+                  Service = dplyr::if_else(ServPsych == 1, "Psychiatry", Service)) %>%
+    dplyr::mutate(Service2 = dplyr::if_else(Service == "DE Psychology", "Psychology", Service))
+
+  # Step 6: Convert to factor and define reference category
+  P_all_tb <- P_all_tb %>%
+    dplyr::mutate(Service = stats::relevel(factor(Service), ref = "Psychology"),
+                  Service2 = stats::relevel(factor(Service2), ref = "Psychology"),
+                  ProviderState = stats::relevel(factor(ProviderState), ref = "ACT"))
+
+
+  # Step 7: Calculate perClients service use
+  P_all_tb <- P_all_tb %>%
+    dplyr::mutate(Appointments_perClients = Appointments/NClients,
+                  Cost_perClients = Cost/NClients,
+                  Episodes_perClients = Episodes/NClients)
+
+  return(P_all_tb)
+}
+make_regression_tbs_ls <- function(models_ls_ls,
+                                   # model_1L_chr,
+                                   outcomes_chr, tab_spanner_chr, dataset_1L_chr, labels_ls = NULL) { #ath_tbl_regression_merge_exp
+
+  # Create the list of models for each outcome
+  models_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+    # Dynamically retrieve model objects
+    # model_all_ls <- get(paste0(model_1L_chr, "_all_c")) # All clients
+    # model_spl_ls <- get(paste0(model_1L_chr, "_spl_c")) # Clients with certain years in the data
+    # list(models_ls_ls$all_c_ls, models_ls_ls$spl_c_ls)
+    # List of models to be merged for each outcome
+    list(
+      models_ls_ls$all_c_ls[[dataset_1L_chr]][[outcome_1L_chr]],
+      models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_1y")]][[paste0("Year1", outcome_1L_chr)]],
+      models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_2y")]][[paste0("Year1", outcome_1L_chr)]],
+      models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_2y")]][[paste0("Year2", outcome_1L_chr)]])
+  }) %>% setNames(outcomes_chr)
+
+  # Create dynamic model names for each outcome
+  model_names_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+    c(paste("Total", outcome_1L_chr),
+      paste("Year 1", outcome_1L_chr),
+      paste("Year 1", outcome_1L_chr),
+      paste("Year 2", outcome_1L_chr))
+  }) %>% setNames(outcomes_chr)
+
+  # Create merged tables for each outcome
+  regression_tbls_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+    make_merged_mdl_tbl(
+      models_ls = models_ls[[outcome_1L_chr]],
+      statistics_ls = model_names_ls[[outcome_1L_chr]],
+      labels_ls = labels_ls,
+      tab_spanner_chr = tab_spanner_chr
+    )
+  }) %>% setNames(outcomes_chr)
+
+  return(regression_tbls_ls)
+}
+
 make_rename_lup <- function(){
   lup_ready4show_correspondences <- ready4show::ready4show_correspondences() %>%
     ready4show::renew.ready4show_correspondences(old_nms_chr = c("HP Staff (excluding coaches)", "female", "male", "0-15 years","16-19 years",
@@ -937,6 +1433,20 @@ make_severity_vars <- function(severity_args_ls,
   severity_vars_chr <- 1:1:length(severity_args_ls$sessions_ls) %>% purrr::map_chr(~paste0(severity_var_1L_chr,ifelse(.x==1,"",paste0("_",LETTERS[.x-1]))))
   return(severity_vars_chr)
 }
+make_sngl_predictor_dss_ls <- function(ds_tb, outcomes_chr, predictors_ls) { #ath_ols_loop_Predictor_Outcome
+  dataset_ls <- lapply(predictors_ls, function(predictor_1L_chr) {
+    outcome_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+      formula_fml <- as.formula(paste(outcome_1L_chr, "~", predictor_1L_chr))
+
+      estimatr::lm_robust(formula_fml, data = ds_tb, se_type = "HC1")
+    }) %>% setNames(outcomes_chr)
+    outcome_ls
+  }) %>% setNames(names(predictors_ls))
+
+  # Return list
+  return(dataset_ls)
+}
+
 make_sports_categories <- function(type_1L_int = c("current","deprecated"),
                                    which_int = integer(0)){
   type_1L_int <- match.arg(type_1L_int)
@@ -1007,6 +1517,51 @@ make_sports_groups <- function(datasets_ls,
       dplyr::arrange(Group %>% stringr::str_replace_all("Grouping ","") %>% as.numeric())
   }
   return(grouped_tb)
+}
+make_stacked_mdl_tbl <- function(models_ls, statistics_ls = NULL, #ath_tbl_regression_stack
+                                 # tab_spanner_chr = NULL,
+                                 labels_ls = NULL) {
+
+  # Loop over models and their names
+  tables_ls <- lapply(seq_along(models_ls), function(i) {
+    make_mdl_smry_tbl(model_mdl = models[[i]], add_glance_1L_lgl = TRUE, statistic_1L_chr = statistics_ls[i], labels_ls = labels_ls)
+  })
+
+  # Merged table
+  merged_table_xx <- gtsummary::tbl_stack(tbls = tables_ls)
+
+  return(merged_table_xx)
+}
+make_tabular_summary <- function(data_tb, vars_chr, labels_ls = NULL, method_1L_chr = "mean", digits_1L_int = 2, missing_1L_chr = "no") { #ath_tbl_summary
+  statistic_continuous <- switch(method_1L_chr,
+                                 "mean" = "{mean} ({sd})",
+                                 "median" = "{median} ({p25} - {p75})",
+                                 stop("Invalid method. Choose 'mean' or 'median'."))
+  table_xx <- data_tb %>%
+    dplyr::select(all_of(vars_chr)) %>%
+    gtsummary::tbl_summary(type = list(where(is.numeric) ~ "continuous",
+                                       where(is.factor) ~ "categorical"),
+                           statistic = list(gtsummary::all_continuous() ~ statistic_continuous, gtsummary::all_categorical() ~ "{n} ({p}%)"),
+                           label = labels_ls,
+                           digits = list(gtsummary::all_continuous() ~ digits_1L_int,
+                                         gtsummary::all_categorical() ~ 0),
+                           missing = missing_1L_chr)
+
+  return(table_xx)
+}
+make_tabular_merge <- function(datasets_ls, vars_chr, labels_ls = NULL, tab_spanner_chr = NULL, method_1L_chr = "mean", digits_1L_int=2) { #ath_tbl_sum_merge
+  # Call function: loop after different dataset
+  tables_ls <- lapply(datasets_ls, function(dataset_tb) {
+    tables_ls <- make_tabular_summary(data_tb = dataset_tb,
+                                      vars_chr = vars_chr, labels_ls = labels_ls,
+                                      method_1L_chr = method_1L_chr, digits_1L_int=digits_1L_int)
+  }) %>% stats::setNames(names(datasets_ls))
+
+  # Create a merged table
+  merged_table <- gtsummary::tbl_merge(tbls = tables_ls, tab_spanner = tab_spanner_chr)
+
+  # Return merged table
+  return(merged_table)
 }
 make_totals_dss <- function(data_tb,
                             activity_1L_chr = "Activity",

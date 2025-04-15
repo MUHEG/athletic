@@ -33,6 +33,11 @@ Useful links:
 \author{
 \strong{Maintainer}: Matthew Hamilton \email{matthew.hamilton1@monash.edu} (\href{https://orcid.org/0000-0001-7407-9194}{ORCID})
 
+Authors:
+\itemize{
+  \item Fikru Rizal \email{fikru.rizal@monash.edu} (\href{https://orcid.org/0000-0002-0064-3255}{ORCID})
+}
+
 Other contributors:
 \itemize{
   \item Monash University [copyright holder]

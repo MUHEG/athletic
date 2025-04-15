@@ -201,7 +201,7 @@ add_sports_data <- function (datasets_ls, categories_chr = make_sports_categorie
                 dplyr::mutate(`:=`(!!rlang::sym(categories_chr[1]), 
                   dplyr::case_when(Sport %in% c("Equestrian", 
                     "Rugby", "Skateboarding", "Football") ~ T, 
-                    Sport %in% c("N/A (missing)", "Does not belong to a sport - accessing MHRN under a Critical Incident", 
+                    Sport %in% c("N/A (missing)", "Does not belong to a sport", 
                       "Works across multiple sports") ~ NA, T ~ 
                       F)))
     }

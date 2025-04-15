@@ -13,13 +13,13 @@ Y <- renewSlot(Y,
                new_val_xx = Ready4useIngest(objects_ls = list(
                  #classes_bup_lup =  Y@b_Ready4useIngest@objects_ls$bup_classes_lup
                  #classes_lup = Z@b_Ready4useIngest@objects_ls$framework_metadata_ls$classes_lup
-                 #abbreviations_lup = abbreviations_lup,
+                 abbreviations_lup = Y@b_Ready4useIngest@objects_ls$abbreviations_lup %>% tibble::add_case(short_name_chr = "pval", long_name_chr = "p value", plural_lgl = F) %>% dplyr::arrange(short_name_chr),
                  #libraries_tb = libraries_tb
                  #exclude_chr = c("aus_09_synth","dce_sa_cards","fakefolk","rebuild")
                  #libraries_ls = libraries_ls
                  #methods_tb = methods_tb
                  #modules_tb = modules_tb
-                 treat_as_words_chr = c(Y@b_Ready4useIngest@objects_ls$treat_as_words_chr, "neuropsychological") %>% sort()
+                 treat_as_words_chr = c(Y@b_Ready4useIngest@objects_ls$treat_as_words_chr, "boxplot", "boxplots", "dataset") %>% sort()
                )),
                slot_nm_1L_chr = "b_Ready4useIngest")
 Y <- share(Y,
