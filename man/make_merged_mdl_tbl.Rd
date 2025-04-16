@@ -21,9 +21,9 @@ make_merged_mdl_tbl(
 \item{labels_ls}{Labels (a list), Default: NULL}
 }
 \value{
-merged_table (An object)
+Merged table (an output object of multiple potential types)
 }
 \description{
-make_merged_mdl_tbl() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make merged model table. The function is called for its side effects and does not return a value.
+make_merged_mdl_tbl() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make merged model table. The function returns Merged table (an output object of multiple potential types).
 }
 \keyword{internal}

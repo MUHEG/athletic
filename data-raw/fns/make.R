@@ -894,6 +894,42 @@ make_key_vars <- function(add_chr = character(0),
     key_vars_chr <- sort(key_vars_chr)
   return(key_vars_chr)
 }
+make_imputed_dataset <- function(X_Ready4useDyad,
+                                 Y_Ready4useDyad){
+
+  imputed_1_xx <- mice::mice(Y_Ready4useDyad@ds_tb %>% dplyr::mutate(dplyr::across(c(Role, Age, Sex, Categorisation, Referrer, Service, ProviderState, ProviderID, Severity), ~ as.factor(.x))), method = "rf", m = 1, maxit = 1)
+  Z_Ready4useDyad <- renewSlot(Y_Ready4useDyad, "ds_tb",
+                               mice::complete(imputed_1_xx) %>% tibble::as_tibble() %>% dplyr::mutate(dplyr::across(c(Role, Age, Sex, Categorisation, Referrer, Service, ProviderState, ProviderID, Severity), ~ as.character(.x))))
+  Z_Ready4useDyad <- renewSlot(X_Ready4useDyad, "ds_tb",
+                               ready4use::add_from_lup_prototype(X_Ready4useDyad@ds_tb,
+                                                                 lup_prototype_tb = Z_Ready4useDyad@ds_tb, match_var_nm_1L_chr = "UID",
+                                                                 type_1L_chr = c("self"), vars_chr = c("Role", "Age", "Sex", "Categorisation", "Referrer")) %>%  #, Service, ProviderState, ProviderID, Severity
+                                 dplyr::arrange(UID, Date))
+  imputed_2_xx <- mice::mice(Z_Ready4useDyad@ds_tb %>% dplyr::mutate(dplyr::across(c(ProviderID), ~ as.factor(.x))), method = "rf", m = 1, maxit = 1)
+  Z_Ready4useDyad <- renewSlot(Z_Ready4useDyad, "ds_tb",
+                               mice::complete(imputed_2_xx) %>% tibble::as_tibble() %>% dplyr::mutate(dplyr::across(c(ProviderID), ~ as.character(.x))))
+  providers_lup <- X_Ready4useDyad@ds_tb %>% dplyr::select(ProviderID, ProviderState) %>% na.omit() %>% dplyr::distinct()
+  Z_Ready4useDyad <- renewSlot(Z_Ready4useDyad, "ds_tb",
+                               Z_Ready4useDyad@ds_tb %>% dplyr::mutate(ProviderState = dplyr::case_when(is.na(ProviderState) ~ purrr::map_chr(ProviderID, ~ ready4::get_from_lup_obj(providers_lup,
+                                                                                                                                                                                     match_value_xx = .x,
+                                                                                                                                                                                     match_var_nm_1L_chr = "ProviderID",
+                                                                                                                                                                                     target_var_nm_1L_chr = "ProviderState")),
+                                                                                                        TRUE ~ ProviderState)))
+  severity_lup <- add_severity(Z_Ready4useDyad@ds_tb, severity_args_ls = severity_args_ls) %>% dplyr::select(UID, Date, Severity, Severity_7_to_12_plus_Disc) %>% na.omit() %>% dplyr::distinct()
+  Z_Ready4useDyad <- renewSlot(Z_Ready4useDyad, "ds_tb",
+                               Z_Ready4useDyad@ds_tb %>%
+                                 dplyr::mutate(Severity = dplyr::case_when(is.na(Severity) ~ Z_Ready4useDyad@ds_tb %>% dplyr::select(UID, Date, Severity) %>% purrr::pmap_chr( ~ {
+                                   filtered_tb <- severity_lup %>%  dplyr::filter(UID == ..1) %>% dplyr::filter(Date>=..2)
+                                   filtered_tb$Severity[1]
+                                 }),
+                                 TRUE ~ Severity)) %>%
+                                 dplyr::mutate(Severity_7_to_12_plus_Disc = dplyr::case_when(is.na(Severity_7_to_12_plus_Disc) ~ Z_Ready4useDyad@ds_tb %>% dplyr::select(UID, Date, Severity_7_to_12_plus_Disc) %>% purrr::pmap_chr( ~ {
+                                   filtered_tb <- severity_lup %>%  dplyr::filter(UID == ..1) %>% dplyr::filter(Date>=..2)
+                                   filtered_tb$Severity_7_to_12_plus_Disc[1]
+                                 }),
+                                 TRUE ~ Severity_7_to_12_plus_Disc)))
+  return(Z_Ready4useDyad)
+}
 make_linked_ds <- function (datasets_ls = NULL,
                             disciplines_1L_lgl = TRUE,
                             end_date_dtm = lubridate::ymd("2024-06-30"),
@@ -1079,15 +1115,14 @@ make_merged_continuous_smry <- function(datasets_ls, outcomes_chr, vars_chr, met
   }) %>% stats::setNames(outcomes_chr)
   return(merged_tables_ls)
 }
-make_merged_mdl_tbl <- function(models_ls, statistics_ls = NULL, tab_spanner_chr = NULL, labels_ls = NULL) { #
-
-  # Loop over models and their names
-  tables_ls <- lapply(seq_along(models), function(i) {
-    make_mdl_smry_tbl(model_mdl = models_ls[[i]], statistic_1L_chr = statistics_ls[i], labels_ls = labels_ls)
+make_merged_mdl_tbl <- function (models_ls, statistics_ls = NULL, tab_spanner_chr = NULL, labels_ls = NULL)
+{
+  tables_ls <- lapply(seq_along(models_ls), function(i) {
+    make_mdl_smry_tbl(model_mdl = models_ls[[i]], statistic_1L_chr = statistics_ls[i],
+                      labels_ls = labels_ls)
   })
-  # Merged table
-  merged_table <- gtsummary::tbl_merge(tbls = tables_ls, tab_spanner = tab_spanner_chr)
-  return(merged_table)
+  merged_table_xx <- gtsummary::tbl_merge(tbls = tables_ls, tab_spanner = tab_spanner_chr)
+  return(merged_table_xx)
 }
 make_modelling_dss <- function(data_tb,
                                activity_1L_chr = "Activity",
@@ -1209,65 +1244,40 @@ make_modelling_dss <- function(data_tb,
                   wide_dss_ls = wide_dss_ls)
   return(dss_lss)
 }
-make_nested_boxplot_ls <- function(dataset_type_1L_chr = "complete",
-                                   datasets_ls,
-                                   outcomes_ls,
-                                   predictors_ls) { # ath_boxplot_data
-  boxplot_ls_ls <- list(
-    # Cumulative
-    all = make_outcomes_boxplots(
-      data_tb = datasets_ls$all_tb,
-      # get(paste0("X1_", dataset_type_1L_chr)), #
-      outcomes_chr = outcome_all, #
-      predictors_chr = predictors_chr, #
-      labels_ls = labels_ls
-    ),
-
-    # Year 1
-    year1 = make_outcomes_boxplots(
-      data_tb = datasets_ls$year_1_tb,
-      # get(paste0("X1_", dataset_type_1L_chr, "_1y"))
-      , #
-      outcomes_chr = outcome_1y, #
-      predictors_chr = predictors_chr, #
-      labels_ls = labels_ls
-    ),
-
-    # Year 2
-    year2 = make_outcomes_boxplots(
-      data_tb = datasets_ls$year_2_tb,
-      # get(paste0("X1_", dataset_type_1L_chr, "_2y")), #
-      outcomes_chr = outcome_2y, #
-      predictors_chr = predictors_chr, #
-      labels_ls = labels_ls
-    )
-  )
+make_nested_boxplot_ls <- function (datasets_ls, labels_ls = NULL, outcomes_ls, predictors_chr)
+{
+  boxplot_ls_ls <- list(all = make_outcomes_boxplots(data_tb = datasets_ls$all_tb,
+                                                     outcomes_chr = outcomes_ls$all_chr,#outcome_all,
+                                                     predictors_chr = predictors_chr,
+                                                     labels_ls = labels_ls),
+                        year1 = make_outcomes_boxplots(data_tb = datasets_ls$year_1_tb,
+                                                       outcomes_chr = outcomes_ls$year_1_chr,#outcome_1y,
+                                                       predictors_chr = predictors_chr,
+                                                       labels_ls = labels_ls),
+                        year2 = make_outcomes_boxplots(data_tb = datasets_ls$year_2_tb,
+                                                       outcomes_chr = outcomes_ls$year_2_chr,#outcome_2y,
+                                                       predictors_chr = predictors_chr,
+                                                       labels_ls = labels_ls))
   return(boxplot_ls_ls)
 }
-make_outcomes_boxplots <- function(outcomes_chr, predictors_chr, data_tb, labels_ls = NULL, palette_1L_chr ="lancet") { #ath_boxplot_outcome
-  scale_fill_fn <- ready4use::get_journal_palette_fn("fill", what_1L_chr = palette_1L_chr)
-  boxplot_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+make_outcomes_boxplots <- function (outcomes_chr, predictors_chr, data_tb, labels_ls = NULL, palette_1L_chr = "lancet")
+{
+  scale_fill_fn <- ready4use::get_journal_palette_fn("fill",  what_1L_chr = palette_1L_chr)
+  boxplots_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
     lapply(predictors_chr, function(predictor_1L_chr) {
-      data_tb %>%
-        ggplot2::ggplot(ggplot2::aes(x = .data[[predictor_1L_chr]], y = .data[[outcome_1L_chr]], fill = .data[[predictor_1L_chr]])) +
+      data_tb %>% ggplot2::ggplot(ggplot2::aes(x = .data[[predictor_1L_chr]],
+                                               y = .data[[outcome_1L_chr]], fill = .data[[predictor_1L_chr]])) +
         ggplot2::geom_boxplot(varwidth = TRUE, alpha = 0.8) +
-        ggplot2::theme_classic() +
-        scale_fill_fn() +
-        ggplot2::theme(legend.position = "none",
-                       panel.background = element_blank(),
-                       panel.grid.major.x = element_blank(),
-                       panel.grid.major.y = element_blank(),
-                       panel.grid.minor.x = element_blank()) +
-        ggplot2::scale_y_continuous(labels = scales::comma,
-                                    breaks = scales::breaks_pretty(6)) +
-        ggplot2::labs(
-          x = if (!is.null(labels_ls)) labels_ls[[predictor_1L_chr]] else predictor_1L_chr,
-          y = if (!is.null(labels_ls)) labels_ls[[outcome_1L_chr]] else outcome_1L_chr,
-          fill = if (!is.null(labels_ls)) labels_ls[[predictor_1L_chr]] else predictor_1L_chr
-        )
+        ggplot2::theme_classic() + scale_fill_fn() +
+        ggplot2::theme(legend.position = "none", panel.background = element_blank(),
+                       panel.grid.major.x = element_blank(), panel.grid.major.y = element_blank(),
+                       panel.grid.minor.x = element_blank())       +
+        ggplot2::scale_y_continuous(labels = scales::comma, breaks = scales::breaks_pretty(6))+
+        ggplot2::labs(x = if (!is.null(labels_ls)) labels_ls[[predictor_1L_chr]] else predictor_1L_chr,
+                      y = if (!is.null(labels_ls)) labels_ls[[outcome_1L_chr]] else outcome_1L_chr,
+                      fill = if (!is.null(labels_ls)) labels_ls[[predictor_1L_chr]] else predictor_1L_chr)
     }) %>% setNames(predictors_chr)
   }) %>% setNames(outcomes_chr)
-
   return(boxplots_ls)
 }
 make_processed_providers_dss_ls <- function(data_tb) {
@@ -1336,42 +1346,24 @@ make_processed_providers_dss_ls <- function(data_tb) {
 
   return(P_all_tb)
 }
-make_regression_tbs_ls <- function(models_ls_ls,
-                                   # model_1L_chr,
-                                   outcomes_chr, tab_spanner_chr, dataset_1L_chr, labels_ls = NULL) { #ath_tbl_regression_merge_exp
-
-  # Create the list of models for each outcome
+make_regression_tbs_ls <- function (models_ls_ls, outcomes_chr, tab_spanner_chr, dataset_1L_chr, labels_ls = NULL)
+{
   models_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
-    # Dynamically retrieve model objects
-    # model_all_ls <- get(paste0(model_1L_chr, "_all_c")) # All clients
-    # model_spl_ls <- get(paste0(model_1L_chr, "_spl_c")) # Clients with certain years in the data
-    # list(models_ls_ls$all_c_ls, models_ls_ls$spl_c_ls)
-    # List of models to be merged for each outcome
-    list(
-      models_ls_ls$all_c_ls[[dataset_1L_chr]][[outcome_1L_chr]],
-      models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_1y")]][[paste0("Year1", outcome_1L_chr)]],
-      models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_2y")]][[paste0("Year1", outcome_1L_chr)]],
-      models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_2y")]][[paste0("Year2", outcome_1L_chr)]])
+    list(models_ls_ls$all_c_ls[[paste0(dataset_1L_chr, "_tb")]][[outcome_1L_chr]],
+         models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_1y_tb")]][[paste0("Year1", outcome_1L_chr)]],
+         models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_2y_tb")]][[paste0("Year1", outcome_1L_chr)]],
+         models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_2y_tb")]][[paste0("Year2", outcome_1L_chr)]])
   }) %>% setNames(outcomes_chr)
-
-  # Create dynamic model names for each outcome
   model_names_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
-    c(paste("Total", outcome_1L_chr),
-      paste("Year 1", outcome_1L_chr),
-      paste("Year 1", outcome_1L_chr),
-      paste("Year 2", outcome_1L_chr))
+    c(paste("Total", outcome_1L_chr), paste("Year 1", outcome_1L_chr),
+      paste("Year 1", outcome_1L_chr), paste("Year 2",
+                                             outcome_1L_chr))
   }) %>% setNames(outcomes_chr)
-
-  # Create merged tables for each outcome
   regression_tbls_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
-    make_merged_mdl_tbl(
-      models_ls = models_ls[[outcome_1L_chr]],
-      statistics_ls = model_names_ls[[outcome_1L_chr]],
-      labels_ls = labels_ls,
-      tab_spanner_chr = tab_spanner_chr
-    )
+    make_merged_mdl_tbl(models_ls = models_ls[[outcome_1L_chr]],
+                        statistics_ls = model_names_ls[[outcome_1L_chr]],
+                        labels_ls = labels_ls, tab_spanner_chr = tab_spanner_chr)
   }) %>% setNames(outcomes_chr)
-
   return(regression_tbls_ls)
 }
 
@@ -1515,18 +1507,13 @@ make_sports_groups <- function(datasets_ls,
   }
   return(grouped_tb)
 }
-make_stacked_mdl_tbl <- function(models_ls, statistics_ls = NULL, #ath_tbl_regression_stack
-                                 # tab_spanner_chr = NULL,
-                                 labels_ls = NULL) {
-
-  # Loop over models and their names
+make_stacked_mdl_tbl <- function (models_ls, statistics_ls = NULL, labels_ls = NULL)
+{
   tables_ls <- lapply(seq_along(models_ls), function(i) {
-    make_mdl_smry_tbl(model_mdl = models[[i]], add_glance_1L_lgl = TRUE, statistic_1L_chr = statistics_ls[i], labels_ls = labels_ls)
+    make_mdl_smry_tbl(model_mdl = models_ls[[i]], add_glance_1L_lgl = TRUE,
+                      statistic_1L_chr = statistics_ls[i], labels_ls = labels_ls)
   })
-
-  # Merged table
   merged_table_xx <- gtsummary::tbl_stack(tbls = tables_ls)
-
   return(merged_table_xx)
 }
 make_tabular_summary <- function(data_tb, vars_chr, labels_ls = NULL, method_1L_chr = "mean", digits_1L_int = 2, missing_1L_chr = "no") { #ath_tbl_summary

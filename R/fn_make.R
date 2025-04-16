@@ -823,6 +823,67 @@ make_grouped_boxplot_ls <- function (plot_data_ls, outcomes_chr, labels_ls)
     }
     return(plots_ls)
 }
+#' Make imputed dataset
+#' @description make_imputed_dataset() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make imputed dataset. The function is called for its side effects and does not return a value.
+#' @param X_Ready4useDyad PARAM_DESCRIPTION
+#' @param Y_Ready4useDyad PARAM_DESCRIPTION
+#' @return Z (A dataset and data dictionary pair.)
+#' @rdname make_imputed_dataset
+#' @export 
+#' @importFrom mice mice complete
+#' @importFrom dplyr mutate across arrange select distinct case_when filter
+#' @importFrom tibble as_tibble
+#' @importFrom ready4use add_from_lup_prototype
+#' @importFrom purrr map_chr pmap_chr
+#' @importFrom ready4 get_from_lup_obj
+#' @keywords internal
+make_imputed_dataset <- function (X_Ready4useDyad, Y_Ready4useDyad) 
+{
+    imputed_1_xx <- mice::mice(Y_Ready4useDyad@ds_tb %>% dplyr::mutate(dplyr::across(c(Role, 
+        Age, Sex, Categorisation, Referrer, Service, ProviderState, 
+        ProviderID, Severity), ~as.factor(.x))), method = "rf", 
+        m = 1, maxit = 1)
+    Z_Ready4useDyad <- renewSlot(Y_Ready4useDyad, "ds_tb", mice::complete(imputed_1_xx) %>% 
+        tibble::as_tibble() %>% dplyr::mutate(dplyr::across(c(Role, 
+        Age, Sex, Categorisation, Referrer, Service, ProviderState, 
+        ProviderID, Severity), ~as.character(.x))))
+    Z_Ready4useDyad <- renewSlot(X_Ready4useDyad, "ds_tb", ready4use::add_from_lup_prototype(X_Ready4useDyad@ds_tb, 
+        lup_prototype_tb = Z_Ready4useDyad@ds_tb, match_var_nm_1L_chr = "UID", 
+        type_1L_chr = c("self"), vars_chr = c("Role", "Age", 
+            "Sex", "Categorisation", "Referrer")) %>% dplyr::arrange(UID, 
+        Date))
+    imputed_2_xx <- mice::mice(Z_Ready4useDyad@ds_tb %>% dplyr::mutate(dplyr::across(c(ProviderID), 
+        ~as.factor(.x))), method = "rf", m = 1, maxit = 1)
+    Z_Ready4useDyad <- renewSlot(Z_Ready4useDyad, "ds_tb", mice::complete(imputed_2_xx) %>% 
+        tibble::as_tibble() %>% dplyr::mutate(dplyr::across(c(ProviderID), 
+        ~as.character(.x))))
+    providers_lup <- X_Ready4useDyad@ds_tb %>% dplyr::select(ProviderID, 
+        ProviderState) %>% na.omit() %>% dplyr::distinct()
+    Z_Ready4useDyad <- renewSlot(Z_Ready4useDyad, "ds_tb", Z_Ready4useDyad@ds_tb %>% 
+        dplyr::mutate(ProviderState = dplyr::case_when(is.na(ProviderState) ~ 
+            purrr::map_chr(ProviderID, ~ready4::get_from_lup_obj(providers_lup, 
+                match_value_xx = .x, match_var_nm_1L_chr = "ProviderID", 
+                target_var_nm_1L_chr = "ProviderState")), TRUE ~ 
+            ProviderState)))
+    severity_lup <- add_severity(Z_Ready4useDyad@ds_tb, severity_args_ls = severity_args_ls) %>% 
+        dplyr::select(UID, Date, Severity, Severity_7_to_12_plus_Disc) %>% 
+        na.omit() %>% dplyr::distinct()
+    Z_Ready4useDyad <- renewSlot(Z_Ready4useDyad, "ds_tb", Z_Ready4useDyad@ds_tb %>% 
+        dplyr::mutate(Severity = dplyr::case_when(is.na(Severity) ~ 
+            Z_Ready4useDyad@ds_tb %>% dplyr::select(UID, Date, 
+                Severity) %>% purrr::pmap_chr(~{
+                filtered_tb <- severity_lup %>% dplyr::filter(UID == 
+                  ..1) %>% dplyr::filter(Date >= ..2)
+                filtered_tb$Severity[1]
+            }), TRUE ~ Severity)) %>% dplyr::mutate(Severity_7_to_12_plus_Disc = dplyr::case_when(is.na(Severity_7_to_12_plus_Disc) ~ 
+        Z_Ready4useDyad@ds_tb %>% dplyr::select(UID, Date, Severity_7_to_12_plus_Disc) %>% 
+            purrr::pmap_chr(~{
+                filtered_tb <- severity_lup %>% dplyr::filter(UID == 
+                  ..1) %>% dplyr::filter(Date >= ..2)
+                filtered_tb$Severity_7_to_12_plus_Disc[1]
+            }), TRUE ~ Severity_7_to_12_plus_Disc)))
+    return(Z_Ready4useDyad)
+}
 #' Make keepers
 #' @description make_keepers() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make keepers. The function returns Keep (a character vector).
 #' @param names_chr Names (a character vector)
@@ -1206,12 +1267,12 @@ make_merged_continuous_smry <- function (datasets_ls, outcomes_chr, vars_chr, me
     return(merged_tables_ls)
 }
 #' Make merged model table
-#' @description make_merged_mdl_tbl() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make merged model table. The function is called for its side effects and does not return a value.
+#' @description make_merged_mdl_tbl() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make merged model table. The function returns Merged table (an output object of multiple potential types).
 #' @param models_ls Models (a list)
 #' @param statistics_ls Statistics (a list), Default: NULL
 #' @param tab_spanner_chr Tab spanner (a character vector), Default: NULL
 #' @param labels_ls Labels (a list), Default: NULL
-#' @return merged_table (An object)
+#' @return Merged table (an output object of multiple potential types)
 #' @rdname make_merged_mdl_tbl
 #' @export 
 #' @importFrom gtsummary tbl_merge
@@ -1219,12 +1280,13 @@ make_merged_continuous_smry <- function (datasets_ls, outcomes_chr, vars_chr, me
 make_merged_mdl_tbl <- function (models_ls, statistics_ls = NULL, tab_spanner_chr = NULL, 
     labels_ls = NULL) 
 {
-    tables_ls <- lapply(seq_along(models), function(i) {
+    tables_ls <- lapply(seq_along(models_ls), function(i) {
         make_mdl_smry_tbl(model_mdl = models_ls[[i]], statistic_1L_chr = statistics_ls[i], 
             labels_ls = labels_ls)
     })
-    merged_table <- gtsummary::tbl_merge(tbls = tables_ls, tab_spanner = tab_spanner_chr)
-    return(merged_table)
+    merged_table_xx <- gtsummary::tbl_merge(tbls = tables_ls, 
+        tab_spanner = tab_spanner_chr)
+    return(merged_table_xx)
 }
 #' Make modelling datasets
 #' @description make_modelling_dss() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make modelling datasets. The function is called for its side effects and does not return a value.
@@ -1323,23 +1385,22 @@ make_modelling_dss <- function (data_tb, activity_1L_chr = "Activity", athlete_r
 }
 #' Make nested boxplot list
 #' @description make_nested_boxplot_ls() is a Make function that creates a new R object. Specifically, this function implements an algorithm to make nested boxplot list. The function returns Boxplot (a list of lists).
-#' @param dataset_type_1L_chr Dataset type (a character vector of length one), Default: 'complete'
 #' @param datasets_ls Datasets (a list)
+#' @param labels_ls Labels (a list), Default: NULL
 #' @param outcomes_ls Outcomes (a list)
-#' @param predictors_ls Predictors (a list)
+#' @param predictors_chr Predictors (a character vector)
 #' @return Boxplot (a list of lists)
 #' @rdname make_nested_boxplot_ls
 #' @export 
 #' @keywords internal
-make_nested_boxplot_ls <- function (dataset_type_1L_chr = "complete", datasets_ls, outcomes_ls, 
-    predictors_ls) 
+make_nested_boxplot_ls <- function (datasets_ls, labels_ls = NULL, outcomes_ls, predictors_chr) 
 {
     boxplot_ls_ls <- list(all = make_outcomes_boxplots(data_tb = datasets_ls$all_tb, 
-        outcomes_chr = outcome_all, predictors_chr = predictors_chr, 
+        outcomes_chr = outcomes_ls$all_chr, predictors_chr = predictors_chr, 
         labels_ls = labels_ls), year1 = make_outcomes_boxplots(data_tb = datasets_ls$year_1_tb, 
-        , outcomes_chr = outcome_1y, predictors_chr = predictors_chr, 
+        outcomes_chr = outcomes_ls$year_1_chr, predictors_chr = predictors_chr, 
         labels_ls = labels_ls), year2 = make_outcomes_boxplots(data_tb = datasets_ls$year_2_tb, 
-        outcomes_chr = outcome_2y, predictors_chr = predictors_chr, 
+        outcomes_chr = outcomes_ls$year_2_chr, predictors_chr = predictors_chr, 
         labels_ls = labels_ls))
     return(boxplot_ls_ls)
 }
@@ -1362,7 +1423,7 @@ make_outcomes_boxplots <- function (outcomes_chr, predictors_chr, data_tb, label
 {
     scale_fill_fn <- ready4use::get_journal_palette_fn("fill", 
         what_1L_chr = palette_1L_chr)
-    boxplot_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
+    boxplots_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
         lapply(predictors_chr, function(predictor_1L_chr) {
             data_tb %>% ggplot2::ggplot(ggplot2::aes(x = .data[[predictor_1L_chr]], 
                 y = .data[[outcome_1L_chr]], fill = .data[[predictor_1L_chr]])) + 
@@ -1446,11 +1507,11 @@ make_regression_tbs_ls <- function (models_ls_ls, outcomes_chr, tab_spanner_chr,
     labels_ls = NULL) 
 {
     models_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
-        list(models_ls_ls$all_c_ls[[dataset_1L_chr]][[outcome_1L_chr]], 
-            models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_1y")]][[paste0("Year1", 
+        list(models_ls_ls$all_c_ls[[paste0(dataset_1L_chr, "_tb")]][[outcome_1L_chr]], 
+            models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_1y_tb")]][[paste0("Year1", 
                 outcome_1L_chr)]], models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, 
-                "_2y")]][[paste0("Year1", outcome_1L_chr)]], 
-            models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_2y")]][[paste0("Year2", 
+                "_2y_tb")]][[paste0("Year1", outcome_1L_chr)]], 
+            models_ls_ls$spl_c_ls[[paste0(dataset_1L_chr, "_2y_tb")]][[paste0("Year2", 
                 outcome_1L_chr)]])
     }) %>% setNames(outcomes_chr)
     model_names_ls <- lapply(outcomes_chr, function(outcome_1L_chr) {
@@ -1704,7 +1765,7 @@ make_sports_tb <- function (datasets_ls, categories_chr = make_sports_categories
 make_stacked_mdl_tbl <- function (models_ls, statistics_ls = NULL, labels_ls = NULL) 
 {
     tables_ls <- lapply(seq_along(models_ls), function(i) {
-        make_mdl_smry_tbl(model_mdl = models[[i]], add_glance_1L_lgl = TRUE, 
+        make_mdl_smry_tbl(model_mdl = models_ls[[i]], add_glance_1L_lgl = TRUE, 
             statistic_1L_chr = statistics_ls[i], labels_ls = labels_ls)
     })
     merged_table_xx <- gtsummary::tbl_stack(tbls = tables_ls)

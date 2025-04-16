@@ -5,20 +5,20 @@
 \title{Make nested boxplot list}
 \usage{
 make_nested_boxplot_ls(
-  dataset_type_1L_chr = "complete",
   datasets_ls,
+  labels_ls = NULL,
   outcomes_ls,
-  predictors_ls
+  predictors_chr
 )
 }
 \arguments{
-\item{dataset_type_1L_chr}{Dataset type (a character vector of length one), Default: 'complete'}
-
 \item{datasets_ls}{Datasets (a list)}
+
+\item{labels_ls}{Labels (a list), Default: NULL}
 
 \item{outcomes_ls}{Outcomes (a list)}
 
-\item{predictors_ls}{Predictors (a list)}
+\item{predictors_chr}{Predictors (a character vector)}
 }
 \value{
 Boxplot (a list of lists)

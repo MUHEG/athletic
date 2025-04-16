@@ -14,7 +14,7 @@ Description: Tools for undertaking analysis of sports datasets for use in
     version of the athletic package has been made available as part of the
     process of testing and documenting the package.  If you have any
     questions, please contact the authors (matthew.hamilton2@monash.edu).
-License: GPL-3 + file LICENSE
+License: GPL-3
 URL: https://muheg.github.io/athletic/, https://github.com/MUHEG/athletic,
     https://ready4-dev.github.io/ready4/
 Encoding: UTF-8
@@ -23,6 +23,7 @@ RoxygenNote: 7.3.2
 Suggests: 
     knitr,
     knitrBootstrap,
+    pkgload,
     rmarkdown,
     testthat
 VignetteBuilder: knitr
